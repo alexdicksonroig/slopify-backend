@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:17.4
+    volumes:
+      - app-db-data:/var/lib/postgresql/data/pgdata
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    env_file:
+      - "./.env"
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      secrets:
+        - pypi_token
+        - pypi_username
+      args:
+        DEV: ${DEV-false}
+    env_file:
+      - "./.env"
+    volumes:
+      - ./app:/app
+    ports:
+      - "8000:8000"
+
+secrets:
+  pypi_token:
+    environment: PYPI_TOKEN
+  pypi_username:
+    environment: PYPI_USERNAME
+
+volumes:
+  app-db-data:
+

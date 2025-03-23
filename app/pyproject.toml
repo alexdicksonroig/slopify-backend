@@ -1,0 +1,27 @@
+[project]
+name = "slopify-backend"
+version = "0.1.0"
+description = "This projects serves as a boilerplate for my e-commerce projects"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "ipython>=9.0.2",
+    "mypy>=1.15.0",
+    "pre-commit>=4.2.0",
+    "pytest>=8.3.5",
+    "pytest-asyncio>=0.25.3",
+    "ruff>=0.11.1",
+    "fastapi[standard]>=0.115.1",
+    "asyncpg>=0.30.0",
+    "pydantic>=2.10.6",
+    "sqlmodel >= 0.0.24",
+    "loguru>=0.7.3",
+    "pydantic-settings>=2.8.1",
+    "sqlalchemy[asyncio]>=2.0.39",
+    "alembic>=1.15.1",
+    "starlette-admin>=0.14.1",
+    "alembic>=1.15.1"
+]
