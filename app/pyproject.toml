@@ -23,5 +23,6 @@ dev = [
     "sqlalchemy[asyncio]>=2.0.39",
     "alembic>=1.15.1",
     "starlette-admin>=0.14.1",
-    "alembic>=1.15.1"
+    "alembic>=1.15.1",
+    "stripe>=12.4.0"
 ]

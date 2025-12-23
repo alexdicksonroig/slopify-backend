@@ -35,4 +35,14 @@ class Settings(BaseSettings):
             path=f"{values.data.get('POSTGRES_DB') or ''}",
         )
 
+    STRIPE_SECRET_KEY: Optional[str] = None
+
+    @field_validator("STRIPE_SECRET_KEY", mode="before")
+    @classmethod
+    def assemble_stripe_key(cls, v: Optional[str]) -> Optional[str]:
+        if not v:
+            return None
+        return v
+
+
 settings = Settings()
