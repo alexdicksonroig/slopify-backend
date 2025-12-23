@@ -12,7 +12,6 @@ services:
   app:
     build:
       context: .
-      dockerfile: docker/Dockerfile
       secrets:
         - pypi_token
         - pypi_username
