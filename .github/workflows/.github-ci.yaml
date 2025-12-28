@@ -71,5 +71,4 @@ jobs:
           name: '${{ env.RELEASE_NAME }}'
           region: '${{ env.GCP_REGION }}'
           description: 'Release ${{ github.sha }}'
-          skaffold_file: '${{ env.SKAFFOLD_FILE }}'
           images: 'app=${{ env.IMAGE_NAME }}'
