@@ -1,0 +1,14 @@
+apiVersion: 'skaffold/v4beta6'
+kind: 'Config'
+metadata:
+  name: 'slopify-backend'
+build:
+  artifacts:
+    - image: 'app'
+      docker:
+        dockerfile: 'Dockerfile'
+manifests:
+  rawYaml:
+    - 'k8s/*.yaml'
+deploy:
+  cloudrun: {}
