@@ -19,7 +19,6 @@ env:
   PROJECT_ID: 'molten-snowfall-482111-s4'
   GAR_REPO: 'quickstart-docker-repo'
   IMAGE_REGISTRY: 'us-east1-docker.pkg.dev'
-  SKAFFOLD_FILE: 'config/skaffold.yaml'
 
 jobs:
   build-and-push:
@@ -59,16 +58,9 @@ jobs:
           docker build -t "${{ env.IMAGE_NAME }}" .
           docker push "${{ env.IMAGE_NAME }}"
 
-      - name: 'Create release name'
-        run: |-
-          echo "RELEASE_NAME=${{ env.SERVICE_NAME }}-${GITHUB_SHA::7}-${GITHUB_RUN_NUMBER}" >> ${GITHUB_ENV}
-
-      - name: 'Create Cloud Deploy release'
-        uses: 'google-github-actions/create-cloud-deploy-release@v0'
-        timeout-minutes: 5
+      - name: 'Deploy to Cloud Run'
+        uses: 'google-github-actions/deploy-cloudrun@v2'
         with:
-          delivery_pipeline: '${{ env.SERVICE_NAME }}'
-          name: '${{ env.RELEASE_NAME }}'
+          service: '${{ env.SERVICE_NAME }}'
           region: '${{ env.GCP_REGION }}'
-          description: 'Release ${{ github.sha }}'
-          images: 'app=${{ env.IMAGE_NAME }}'
+          image: '${{ env.IMAGE_NAME }}'
