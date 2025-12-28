@@ -11,6 +11,13 @@ engine = create_async_engine(
     pool_pre_ping=True,
     echo=settings.DATABASE_ECHO,
     future=True,
+    pool_size=5,
+    max_overflow=10,
+    pool_recycle=3600,
+    connect_args={
+        "server_settings": {"application_name": "slopify-backend"},
+        "timeout": 10,
+    }
 )
 
 async def init_db():
