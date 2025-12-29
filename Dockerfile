@@ -43,4 +43,5 @@ COPY --from=builder /deps/.venv /deps/.venv
 COPY app /app
 ENV PATH="/deps/.venv/bin:$PATH"
 
+# TODO: When self-hosted, replace --forwarded-allow-ips=* with specific proxy IPs
 CMD ["fastapi", "run", "app/main.py", "--port", "8080", "--proxy-headers", "--forwarded-allow-ips=*"]
