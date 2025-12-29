@@ -64,7 +64,7 @@ jobs:
           service: '${{ env.SERVICE_NAME }}'
           region: '${{ env.GCP_REGION }}'
           image: '${{ env.IMAGE_NAME }}'
-          flags: '--add-cloudsql-instances=${{ secrets.CLOUD_SQL_INSTANCE }} --allow-unauthenticated'
+          flags: '--add-cloudsql-instances=${{ secrets.CLOUD_SQL_INSTANCE }} --allow-unauthenticated --vpc-connector=cloud-sql-connector --vpc-egress=private-ranges-only'
           env_vars: |-
             DATABASE_ECHO=false
             SQLALCHEMY_DATABASE_URI=${{ secrets.SQLALCHEMY_DATABASE_URI }}
