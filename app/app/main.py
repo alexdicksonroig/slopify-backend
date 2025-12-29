@@ -12,7 +12,8 @@ from app.app.db.session import SessionLocal, init_db, admin
 
 app = FastAPI()
 origins = [
-    'http://localhost:5173'
+    'http://localhost:5173',
+    'https://slopifyproject.com',
 ]
 app.add_middleware(
     CORSMiddleware,
