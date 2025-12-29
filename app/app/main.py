@@ -11,6 +11,7 @@ from app.app.db.session import SessionLocal, init_db, admin
 
 
 app = FastAPI()
+# TODO: This is so bad, use secrets instead
 origins = [
     'http://localhost:5173',
     'https://slopifyproject.com',
