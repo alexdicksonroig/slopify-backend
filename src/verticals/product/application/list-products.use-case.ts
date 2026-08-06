@@ -1,10 +1,10 @@
 import { type Product } from '../domain/product.entity'
-import { type ProductRepositoryPort } from '../domain/product.repository'
+import { productRepository } from '../infrastructure/persistence/product.repository'
 
 export class ListProductsUseCase {
-  constructor (private readonly productRepository: ProductRepositoryPort) {}
-
   async execute (): Promise<Product[]> {
-    return await this.productRepository.findAll()
+    return await productRepository.findAll()
   }
 }
+
+export const listProductsUseCase = new ListProductsUseCase()

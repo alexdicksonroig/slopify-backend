@@ -1,9 +1,9 @@
-import { type ProductRepositoryPort } from '../domain/product.repository'
+import { productRepository } from '../infrastructure/persistence/product.repository'
 
 export class DeleteProductUseCase {
-  constructor (private readonly productRepository: ProductRepositoryPort) {}
-
   async execute (id: number): Promise<boolean> {
-    return await this.productRepository.delete(id)
+    return await productRepository.delete(id)
   }
 }
+
+export const deleteProductUseCase = new DeleteProductUseCase()

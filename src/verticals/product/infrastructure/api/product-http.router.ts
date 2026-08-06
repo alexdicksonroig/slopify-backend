@@ -2,13 +2,6 @@ import multipart from '@fastify/multipart'
 import { type FastifyPluginAsync } from 'fastify'
 import { productHandler } from './product-http.handler'
 import { productThumbnailHandler } from './product-thumbnail-http.handler'
-type CreateProductBody = {
-  name: string
-  description?: string | null
-  priceInCents: number
-}
-
-type UpdateProductBody = Partial<CreateProductBody>
 
 const productIdParams = {
   type: 'object',
@@ -37,7 +30,13 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
   }, productHandler.get)
 
   // TODO: Require admin authentication for all Product mutation routes.
-  fastify.post<{ Body: CreateProductBody }>('/products', {
+  fastify.post<{
+    Body: {
+      name: string
+      description?: string | null
+      priceInCents: number
+    }
+  }>('/products', {
     schema: {
       body: {
         type: 'object',
@@ -50,7 +49,11 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
 
   fastify.patch<{
     Params: { id: string }
-    Body: UpdateProductBody
+    Body: Partial<{
+      name: string
+      description?: string | null
+      priceInCents: number
+    }>
   }>('/products/:id', {
     schema: {
       params: productIdParams,

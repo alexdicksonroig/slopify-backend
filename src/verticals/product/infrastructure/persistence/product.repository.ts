@@ -3,12 +3,11 @@ import { getDrizzleDB } from '@database'
 import { Product } from '../../domain/product.entity'
 import {
   type CreateProduct,
-  type ProductRepositoryPort,
   type UpdateProduct
 } from '../../domain/product.repository'
 import { products } from './schema'
 
-export class ProductRepository implements ProductRepositoryPort {
+export class ProductRepository {
   async findAll (): Promise<Product[]> {
     const records = await getDrizzleDB().select().from(products)
     return records.map((record) => new Product(
