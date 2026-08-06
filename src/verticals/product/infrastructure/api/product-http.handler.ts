@@ -6,12 +6,21 @@ import { ListProductsUseCase } from '../../application/list-products.use-case'
 import { UpdateProductUseCase } from '../../application/update-product.use-case'
 import { productRepository } from '../persistence/product.repository'
 import { r2Adapter } from '../r2.adapter'
-import {
-  type CreateProductBody,
-  type GetProductParams,
-  type ProductResponse,
-  type UpdateProductBody
-} from './product-http.dtos'
+type CreateProductBody = {
+  name: string
+  description?: string | null
+  priceInCents: number
+}
+
+type UpdateProductBody = Partial<CreateProductBody>
+
+type ProductResponse = {
+  id: number
+  name: string
+  description: string | null
+  priceInCents: number
+  thumbnailUrl: string | null
+}
 
 const productCreator = new CreateProductUseCase(productRepository)
 const productDeleter = new DeleteProductUseCase(productRepository)
@@ -34,7 +43,7 @@ class ProductHandler {
   }
 
   get = async (
-    request: FastifyRequest<{ Params: GetProductParams }>,
+    request: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply
   ): Promise<ProductResponse | FastifyReply> => {
     const product = await productFinder.execute(Number(request.params.id))
@@ -69,7 +78,10 @@ class ProductHandler {
   }
 
   update = async (
-    request: FastifyRequest<{ Params: GetProductParams, Body: UpdateProductBody }>,
+    request: FastifyRequest<{
+      Params: { id: string }
+      Body: UpdateProductBody
+    }>,
     reply: FastifyReply
   ): Promise<ProductResponse | FastifyReply> => {
     const product = await productUpdater.execute(Number(request.params.id), request.body)
@@ -87,7 +99,7 @@ class ProductHandler {
   }
 
   delete = async (
-    request: FastifyRequest<{ Params: GetProductParams }>,
+    request: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply
   ): Promise<FastifyReply> => {
     const id = Number(request.params.id)

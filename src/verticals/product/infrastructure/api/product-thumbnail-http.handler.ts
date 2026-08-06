@@ -5,13 +5,19 @@ import { UpdateProductThumbnailUseCase } from '../../application/update-product-
 import { productRepository } from '../persistence/product.repository'
 import { productThumbnailImageAdapter } from '../product-thumbnail-image.adapter'
 import { r2Adapter } from '../r2.adapter'
-import { type GetProductParams, type ProductResponse } from './product-http.dtos'
+type ProductResponse = {
+  id: number
+  name: string
+  description: string | null
+  priceInCents: number
+  thumbnailUrl: string | null
+}
 
 const acceptedTypes = new Set(['image/jpeg', 'image/png', 'image/webp'])
 
 class ProductThumbnailHandler {
   upload = async (
-    request: FastifyRequest<{ Params: GetProductParams }>,
+    request: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply
   ): Promise<ProductResponse | FastifyReply> => {
     const product = await productRepository.findById(Number(request.params.id))
@@ -50,7 +56,7 @@ class ProductThumbnailHandler {
   }
 
   remove = async (
-    request: FastifyRequest<{ Params: GetProductParams }>,
+    request: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply
   ): Promise<FastifyReply> => {
     const product = await productRepository.findById(Number(request.params.id))

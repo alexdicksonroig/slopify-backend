@@ -1,7 +1,7 @@
-export class Variant {
+export class ProductOption {
   constructor (
     readonly id: number,
-    readonly possibleOptions: string[],
+    readonly possibleValues: string[],
     readonly label: string
   ) {}
 }

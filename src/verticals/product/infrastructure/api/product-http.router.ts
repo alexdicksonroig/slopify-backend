@@ -2,11 +2,13 @@ import multipart from '@fastify/multipart'
 import { type FastifyPluginAsync } from 'fastify'
 import { productHandler } from './product-http.handler'
 import { productThumbnailHandler } from './product-thumbnail-http.handler'
-import {
-  type CreateProductBody,
-  type GetProductParams,
-  type UpdateProductBody
-} from './product-http.dtos'
+type CreateProductBody = {
+  name: string
+  description?: string | null
+  priceInCents: number
+}
+
+type UpdateProductBody = Partial<CreateProductBody>
 
 const productIdParams = {
   type: 'object',
@@ -30,7 +32,7 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
 
   fastify.get('/products', productHandler.list)
 
-  fastify.get<{ Params: GetProductParams }>('/products/:id', {
+  fastify.get<{ Params: { id: string } }>('/products/:id', {
     schema: { params: productIdParams }
   }, productHandler.get)
 
@@ -46,7 +48,10 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
     }
   }, productHandler.create)
 
-  fastify.patch<{ Params: GetProductParams, Body: UpdateProductBody }>('/products/:id', {
+  fastify.patch<{
+    Params: { id: string }
+    Body: UpdateProductBody
+  }>('/products/:id', {
     schema: {
       params: productIdParams,
       body: {
@@ -58,15 +63,15 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
     }
   }, productHandler.update)
 
-  fastify.put<{ Params: GetProductParams }>('/products/:id/thumbnail', {
+  fastify.put<{ Params: { id: string } }>('/products/:id/thumbnail', {
     schema: { params: productIdParams }
   }, productThumbnailHandler.upload)
 
-  fastify.delete<{ Params: GetProductParams }>('/products/:id/thumbnail', {
+  fastify.delete<{ Params: { id: string } }>('/products/:id/thumbnail', {
     schema: { params: productIdParams }
   }, productThumbnailHandler.remove)
 
-  fastify.delete<{ Params: GetProductParams }>('/products/:id', {
+  fastify.delete<{ Params: { id: string } }>('/products/:id', {
     schema: { params: productIdParams }
   }, productHandler.delete)
 }

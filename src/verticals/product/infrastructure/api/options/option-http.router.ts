@@ -1,6 +1,5 @@
 import { type FastifyPluginAsync } from 'fastify'
-import { type CreateVariantBody } from './variant-http.dtos'
-import { variantHandler } from './variant-http.handler'
+import { optionHandler } from './option-http.handler'
 
 const nonBlankString = {
   type: 'string',
@@ -9,17 +8,19 @@ const nonBlankString = {
 }
 
 const router: FastifyPluginAsync = async (fastify): Promise<void> => {
-  fastify.get('/variants', variantHandler.list)
+  fastify.get('/product-options', optionHandler.list)
 
-  // TODO: Require admin authentication for all Variant mutation routes.
-  fastify.post<{ Body: CreateVariantBody }>('/variants', {
+  // TODO: Require admin authentication for all Product Option mutation routes.
+  fastify.post<{
+    Body: { possibleValues: string[], label: string }
+  }>('/product-options', {
     schema: {
       body: {
         type: 'object',
-        required: ['possibleOptions', 'label'],
+        required: ['possibleValues', 'label'],
         additionalProperties: false,
         properties: {
-          possibleOptions: {
+          possibleValues: {
             type: 'array',
             minItems: 1,
             uniqueItems: true,
@@ -29,7 +30,7 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
         }
       }
     }
-  }, variantHandler.create)
+  }, optionHandler.create)
 }
 
 export default router

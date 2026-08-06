@@ -8,7 +8,7 @@
     :root { --navy: #182433; --navy-light: #26384d; --blue: #206bc4; --blue-hover: #1a5aa5; --page: #f4f6fa; --border: #dce1e7; --text: #182433; --muted: #667382; --danger: #d63939; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--text); background: var(--page); }
     * { box-sizing: border-box; }
     body { margin: 0; min-height: 100vh; }
-    button, input, textarea { font: inherit; }
+    button, input, textarea, select { font: inherit; }
     button { cursor: pointer; }
     .shell { min-height: 100vh; display: grid; grid-template-columns: 260px 1fr; }
     .sidebar { background: var(--navy); color: #b8c2cc; display: flex; flex-direction: column; padding: 1.25rem .75rem; }
@@ -65,8 +65,14 @@
     .modal-footer { justify-content: flex-end; gap: .6rem; border-top: 1px solid var(--border); }
     .close { border: 0; background: transparent; color: var(--muted); font-size: 1.4rem; line-height: 1; }
     label { display: grid; gap: .4rem; color: #405366; font-size: .84rem; font-weight: 600; }
-    input, textarea { width: 100%; padding: .58rem .65rem; border: 1px solid #cdd5df; border-radius: 5px; color: var(--text); outline-color: var(--blue); }
+    input, textarea, select { width: 100%; padding: .58rem .65rem; border: 1px solid #cdd5df; border-radius: 5px; color: var(--text); background: white; outline-color: var(--blue); }
     textarea { min-height: 92px; resize: vertical; }
+    .variant-fields { display: grid; gap: .65rem; }
+    .variant-heading { color: #405366; font-size: .84rem; font-weight: 600; }
+    .variant-card { display: grid; gap: .65rem; padding: .8rem; border: 1px solid var(--border); border-radius: 6px; }
+    .variant-card-header { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: .65rem; }
+    .variant-row { display: grid; grid-template-columns: minmax(100px, 1fr) 2fr; align-items: center; gap: .8rem; }
+    .variant-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .thumbnail-preview { display: flex; align-items: center; gap: .8rem; }
     .thumbnail-preview img { width: 88px; height: 88px; border: 1px solid var(--border); border-radius: 6px; object-fit: contain; }
     .field-help, #status { margin: 0; color: var(--muted); font-size: .78rem; }
@@ -81,7 +87,7 @@
       <div class="brand"><span class="brand-mark">S</span> Slopify Admin</div>
       <div class="nav-label">Catalog</div>
       <a class="nav-item active" href="/admin/"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 21v-13l9-5 9 5v13h-6v-6h-6v6z"/></svg>Products</a>
-      <a class="nav-item" href="/admin/variants"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>Variants</a>
+      <a class="nav-item" href="/admin/product-options"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>Product options</a>
       <div class="nav-label" style="margin-top: 1rem">System</div>
       <a class="nav-item" href="/documentation"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 19.5v-15a2 2 0 0 1 2-2h12v19h-12a2 2 0 0 1-2-2z"/><path d="M8 7h6M8 11h6"/></svg>API documentation</a>
     </aside>
@@ -111,6 +117,7 @@
           <label>Name <input id="name" name="name" required minlength="1" autocomplete="off"></label>
           <label>Description <textarea id="description" name="description"></textarea></label>
           <label>Price in euro cents <input id="priceInCents" name="priceInCents" required type="number" min="0" step="1"><span class="field-help">Example: €25.00 is 2500 cents.</span></label>
+          <div class="variant-fields"><span class="variant-heading">Product variants</span><div class="variant-fields" id="product-variants"><span class="field-help">Loading product variants…</span></div></div>
           <label>Thumbnail <input id="thumbnail" name="thumbnail" type="file" accept="image/jpeg,image/png,image/webp"><span class="field-help">JPEG, PNG, or WebP. Maximum 500 KB.</span></label>
           <div class="thumbnail-preview" id="thumbnail-preview" hidden><img id="thumbnail-preview-image" alt="Product Thumbnail preview"><button class="btn btn-danger" id="remove-thumbnail" type="button">Remove thumbnail</button></div>
           <p id="status" role="alert"></p>
@@ -133,6 +140,9 @@
     const thumbnailPreview = document.querySelector('#thumbnail-preview')
     const thumbnailPreviewImage = document.querySelector('#thumbnail-preview-image')
     const removeThumbnailButton = document.querySelector('#remove-thumbnail')
+    const productVariants = document.querySelector('#product-variants')
+    let productOptions = []
+    let loadedProductVariants = []
     let products = []
     let toastTimer
     let editingId = null
@@ -148,9 +158,28 @@
     const clearThumbnailObjectUrl = () => { if (thumbnailObjectUrl) URL.revokeObjectURL(thumbnailObjectUrl); thumbnailObjectUrl = null }
     const showThumbnailPreview = (url) => { thumbnailPreviewImage.src = url; thumbnailPreview.hidden = false }
     const resetThumbnailEditor = (thumbnailUrl = null) => { clearThumbnailObjectUrl(); thumbnailInput.value = ''; removeThumbnail = false; currentThumbnailUrl = thumbnailUrl; if (thumbnailUrl) showThumbnailPreview(thumbnailUrl); else { thumbnailPreviewImage.removeAttribute('src'); thumbnailPreview.hidden = true } }
-    const closeModal = () => { modal.hidden = true; form.reset(); resetThumbnailEditor(); editingId = null; clearError() }
-    const openCreate = () => { editingId = null; form.reset(); resetThumbnailEditor(); clearError(); modalTitle.textContent = 'Create product'; submit.textContent = 'Create product'; modal.hidden = false; form.name.focus() }
-    const openEdit = (product) => { editingId = product.id; clearError(); modalTitle.textContent = `Edit product #${product.id}`; submit.textContent = 'Save changes'; form.name.value = product.name; form.description.value = product.description || ''; form.priceInCents.value = product.priceInCents; resetThumbnailEditor(product.thumbnailUrl); modal.hidden = false; form.name.focus() }
+    const productVariantHtml = (variant = { sku: '', selections: [] }) => `<div class="variant-card"${variant.id ? ` data-variant-id="${variant.id}"` : ''}><div class="variant-card-header"><label>SKU <input data-variant-sku required value="${escapeHtml(variant.sku)}" autocomplete="off"${variant.id ? ' readonly' : ''}></label>${variant.id ? '' : '<button class="btn btn-danger" data-action="remove-variant" type="button">Remove</button>'}</div>${productOptions.map((option) => { const selection = variant.selections.find((item) => item.option.id === option.id); return `<label class="variant-row"><span>${escapeHtml(option.label)}</span><select data-option-id="${option.id}"><option value="">Not used</option>${option.possibleValues.map((value) => `<option value="${escapeHtml(value)}"${selection?.value === value ? ' selected' : ''}>${escapeHtml(value)}</option>`).join('')}</select></label>` }).join('')}</div>`
+    const renderProductVariants = (variants) => {
+      productVariants.innerHTML = `${variants.map(productVariantHtml).join('')}<button class="btn btn-outline" data-action="add-variant" type="button">+ Add product variant</button>`
+    }
+    const loadProductVariants = async (productId = null) => {
+      submit.disabled = true
+      productVariants.innerHTML = '<span class="field-help">Loading product variants…</span>'
+      try {
+        const [optionsResponse, variantsResponse] = await Promise.all([
+          fetch('/product-options'),
+          productId ? fetch(`/products/${productId}/variants`) : Promise.resolve(null)
+        ])
+        if (!optionsResponse.ok || (variantsResponse && !variantsResponse.ok)) throw new Error()
+        productOptions = await optionsResponse.json()
+        loadedProductVariants = variantsResponse ? await variantsResponse.json() : []
+        renderProductVariants(loadedProductVariants)
+        submit.disabled = false
+      } catch { productVariants.innerHTML = '<span class="field-help">Could not load product variants.</span>'; showError('Could not load product variants.') }
+    }
+    const closeModal = () => { modal.hidden = true; form.reset(); resetThumbnailEditor(); productVariants.innerHTML = ''; loadedProductVariants = []; submit.disabled = false; editingId = null; clearError() }
+    const openCreate = async () => { editingId = null; form.reset(); resetThumbnailEditor(); clearError(); modalTitle.textContent = 'Create product'; submit.textContent = 'Create product'; modal.hidden = false; form.name.focus(); await loadProductVariants() }
+    const openEdit = async (product) => { editingId = product.id; clearError(); modalTitle.textContent = `Edit product #${product.id}`; submit.textContent = 'Save changes'; form.name.value = product.name; form.description.value = product.description || ''; form.priceInCents.value = product.priceInCents; resetThumbnailEditor(product.thumbnailUrl); modal.hidden = false; form.name.focus(); await loadProductVariants(product.id) }
 
     const renderProducts = () => {
       const query = search.value.trim().toLowerCase()
@@ -174,6 +203,56 @@
       if (!response.ok) { const error = await response.json().catch(() => ({})); showError(error.message || 'Could not save product.'); return }
 
       const savedProduct = await response.json()
+      const variants = [...productVariants.querySelectorAll('.variant-card')].map((variant) => ({
+        id: variant.dataset.variantId ? Number(variant.dataset.variantId) : null,
+        sku: variant.querySelector('[data-variant-sku]').value,
+        selections: [...variant.querySelectorAll('select[data-option-id]')]
+          .filter((select) => select.value)
+          .map((select) => ({
+            optionId: Number(select.dataset.optionId),
+            value: select.value
+          }))
+      }))
+      let variantChangeFailed = false
+      try {
+        const initialVariants = new Map(loadedProductVariants.map((variant) => [variant.id, variant]))
+        for (const variant of variants) {
+          let variantId = variant.id
+          if (!variantId) {
+            const createResponse = await fetch(`/products/${savedProduct.id}/variants`, {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ sku: variant.sku })
+            })
+            if (!createResponse.ok) throw new Error()
+            variantId = (await createResponse.json()).id
+          }
+
+          const previousSelections = new Map(
+            (initialVariants.get(variantId)?.selections || [])
+              .map((selection) => [selection.option.id, selection.value])
+          )
+          const nextSelections = new Map(
+            variant.selections.map((selection) => [selection.optionId, selection.value])
+          )
+
+          for (const [optionId, value] of previousSelections) {
+            if (nextSelections.get(optionId) === value) continue
+            const deleteResponse = await fetch(`/product-variants/${variantId}/selections/${optionId}`, { method: 'DELETE' })
+            if (!deleteResponse.ok) throw new Error()
+          }
+          for (const [optionId, value] of nextSelections) {
+            if (previousSelections.get(optionId) === value) continue
+            const addResponse = await fetch(`/product-variants/${variantId}/selections`, {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ optionId, value })
+            })
+            if (!addResponse.ok) throw new Error()
+          }
+        }
+      } catch { variantChangeFailed = true }
+
       const thumbnail = thumbnailInput.files[0]
       let thumbnailChangeFailed = false
       try {
@@ -189,8 +268,24 @@
 
       const message = wasEditing ? 'Product updated successfully.' : 'Product created successfully.'
       closeModal(); await loadProducts()
-      if (thumbnailChangeFailed) return showToast(`${message} Thumbnail change failed.`, true)
+      const failedChanges = [variantChangeFailed && 'variants', thumbnailChangeFailed && 'thumbnail'].filter(Boolean)
+      if (failedChanges.length) return showToast(`${message} Could not update ${failedChanges.join(' and ')}.`, true)
       showToast(message)
+    })
+
+    productVariants.addEventListener('click', (event) => {
+      const button = event.target.closest('button[data-action]')
+      if (!button) return
+      if (button.dataset.action === 'remove-variant') button.closest('.variant-card').remove()
+      if (button.dataset.action === 'add-variant') {
+        const firstVariant = productVariants.querySelector('.variant-card')
+        const selections = firstVariant
+          ? [...firstVariant.querySelectorAll('select[data-option-id]')]
+              .filter((select) => select.value)
+              .map((select) => ({ option: { id: Number(select.dataset.optionId) }, value: select.value }))
+          : []
+        button.insertAdjacentHTML('beforebegin', productVariantHtml({ sku: '', selections }))
+      }
     })
 
     productsBody.addEventListener('click', async (event) => {

@@ -6,6 +6,10 @@ Use Domain-Driven Design (DDD).
 - Domain and application code must not depend on infrastructure.
 - Do not import another module's `domain/`, `application/`, or `infrastructure/`. Coordinate through events or dispatchers
 - Do not use dependency injections/ports/interfaces. Just import an already created insteance of a repostirory for example.
+- Never stage changes or otherwise modify the Git index. Do not run `git add`, `git rm --cached`, or other index-changing commands unless the user explicitly asks.
+- Do not create `toX` mapping functions. Pass raw data directly to an entity or value object constructor at the point of use.
+- Do not create separate `.dtos.ts` files. Define request and response types directly in the handler or router where they are used.
+- In handlers and routers, inline types with only one or two properties instead of declaring a separate named type.
 
 - Entity → `domain/<concept>.entity.ts`
 - Value object → `domain/<concept>.value-object.ts`

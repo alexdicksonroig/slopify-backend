@@ -13,8 +13,8 @@ const adminAdapter: FastifyPluginAsync = async (fastify): Promise<void> => {
     wildcard: false
   })
 
-  fastify.get('/admin/variants', async (_request, reply) => {
-    return await reply.sendFile('variants.html')
+  fastify.get('/admin/product-options', async (_request, reply) => {
+    return await reply.sendFile('product-options.html')
   })
 }
 
