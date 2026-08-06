@@ -1,8 +1,8 @@
-import { type ProductVariant } from '../../domain/variants/product-variant.entity'
-import { variantRepository } from '../../infrastructure/persistence/variants/variant.repository'
+import { type ProductVariant } from "../../domain/variants/product-variant.entity"
+import { variantRepository } from "../../infrastructure/persistence/variants/variant.repository"
 
 export class ListProductVariantsUseCase {
-  async execute (productId: number): Promise<ProductVariant[]> {
+  async execute(productId: number): Promise<ProductVariant[]> {
     return await variantRepository.findForProduct(productId)
   }
 }

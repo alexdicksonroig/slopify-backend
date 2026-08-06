@@ -1,8 +1,8 @@
-import { type Product } from '../domain/product.entity'
-import { productRepository } from '../infrastructure/persistence/product.repository'
+import { type Product } from "../domain/product.entity"
+import { productRepository } from "../infrastructure/persistence/product.repository"
 
 export class GetProductUseCase {
-  async execute (id: number): Promise<Product | null> {
+  async execute(id: number): Promise<Product | null> {
     return await productRepository.findById(id)
   }
 }

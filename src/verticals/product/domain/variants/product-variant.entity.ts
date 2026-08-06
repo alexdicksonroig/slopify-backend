@@ -1,4 +1,4 @@
-import { type ProductOption } from '../options/product-option.entity'
+import { type ProductOption } from "../options/product-option.entity"
 
 export type ProductOptionSelection = {
   option: ProductOption
@@ -6,10 +6,10 @@ export type ProductOptionSelection = {
 }
 
 export class ProductVariant {
-  constructor (
+  constructor(
     readonly id: number,
     readonly productId: number,
     readonly sku: string,
-    readonly selections: ProductOptionSelection[]
+    readonly selections: ProductOptionSelection[],
   ) {}
 }

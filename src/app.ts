@@ -1,7 +1,7 @@
-import * as path from 'node:path'
-import AutoLoad, { type AutoloadPluginOptions } from '@fastify/autoload'
-import { type FastifyPluginAsync } from 'fastify'
-import { fileURLToPath } from 'node:url'
+import * as path from "node:path"
+import AutoLoad, { type AutoloadPluginOptions } from "@fastify/autoload"
+import { type FastifyPluginAsync } from "fastify"
+import { fileURLToPath } from "node:url"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -11,13 +11,9 @@ export type AppOptions = {
 } & Partial<AutoloadPluginOptions>
 
 // Pass --options via CLI arguments in command to enable these options.
-const options: AppOptions = {
-}
+const options: AppOptions = {}
 
-const app: FastifyPluginAsync<AppOptions> = async (
-  fastify,
-  opts
-): Promise<void> => {
+const app: FastifyPluginAsync<AppOptions> = async (fastify, opts): Promise<void> => {
   // Place here your custom code!
 
   // Do not touch the following lines
@@ -27,19 +23,19 @@ const app: FastifyPluginAsync<AppOptions> = async (
   // through your application
   // eslint-disable-next-line no-void
   void fastify.register(AutoLoad, {
-    dir: path.join(__dirname, 'plugins'),
+    dir: path.join(__dirname, "plugins"),
     options: opts,
-    forceESM: true
+    forceESM: true,
   })
 
   // Load only HTTP routers from each vertical.
   // eslint-disable-next-line no-void
   void fastify.register(AutoLoad, {
-    dir: path.join(__dirname, 'verticals'),
+    dir: path.join(__dirname, "verticals"),
     matchFilter: /\.router\.(?:js|ts)$/,
     dirNameRoutePrefix: false,
     options: opts,
-    forceESM: true
+    forceESM: true,
   })
 }
 

@@ -1,36 +1,40 @@
-import { type FastifyPluginAsync } from 'fastify'
-import { optionHandler } from './option-http.handler'
+import { type FastifyPluginAsync } from "fastify"
+import { optionHandler } from "./option-http.handler"
 
 const nonBlankString = {
-  type: 'string',
+  type: "string",
   minLength: 1,
-  pattern: '.*\\S.*'
+  pattern: ".*\\S.*",
 }
 
 const router: FastifyPluginAsync = async (fastify): Promise<void> => {
-  fastify.get('/product-options', optionHandler.list)
+  fastify.get("/product-options", optionHandler.list)
 
   // TODO: Require admin authentication for all Product Option mutation routes.
   fastify.post<{
-    Body: { possibleValues: string[], label: string }
-  }>('/product-options', {
-    schema: {
-      body: {
-        type: 'object',
-        required: ['possibleValues', 'label'],
-        additionalProperties: false,
-        properties: {
-          possibleValues: {
-            type: 'array',
-            minItems: 1,
-            uniqueItems: true,
-            items: nonBlankString
+    Body: { possibleValues: string[]; label: string }
+  }>(
+    "/product-options",
+    {
+      schema: {
+        body: {
+          type: "object",
+          required: ["possibleValues", "label"],
+          additionalProperties: false,
+          properties: {
+            possibleValues: {
+              type: "array",
+              minItems: 1,
+              uniqueItems: true,
+              items: nonBlankString,
+            },
+            label: nonBlankString,
           },
-          label: nonBlankString
-        }
-      }
-    }
-  }, optionHandler.create)
+        },
+      },
+    },
+    optionHandler.create,
+  )
 }
 
 export default router

@@ -1,25 +1,25 @@
-import { eq } from 'drizzle-orm'
-import { getDrizzleDB } from '@database'
-import { Product } from '../../domain/product.entity'
-import {
-  type CreateProduct,
-  type UpdateProduct
-} from '../../domain/product.repository'
-import { products } from './schema'
+import { eq } from "drizzle-orm"
+import { getDrizzleDB } from "@database"
+import { Product } from "../../domain/product.entity"
+import { type CreateProduct, type UpdateProduct } from "../../domain/product.repository"
+import { products } from "./schema"
 
 export class ProductRepository {
-  async findAll (): Promise<Product[]> {
+  async findAll(): Promise<Product[]> {
     const records = await getDrizzleDB().select().from(products)
-    return records.map((record) => new Product(
-      record.id,
-      record.name,
-      record.description,
-      record.priceInCents,
-      record.thumbnailReference
-    ))
+    return records.map(
+      (record) =>
+        new Product(
+          record.id,
+          record.name,
+          record.description,
+          record.priceInCents,
+          record.thumbnailReference,
+        ),
+    )
   }
 
-  async findById (id: number): Promise<Product | null> {
+  async findById(id: number): Promise<Product | null> {
     const [record] = await getDrizzleDB()
       .select()
       .from(products)
@@ -32,16 +32,16 @@ export class ProductRepository {
       record.name,
       record.description,
       record.priceInCents,
-      record.thumbnailReference
+      record.thumbnailReference,
     )
   }
 
-  async create (product: CreateProduct): Promise<Product> {
+  async create(product: CreateProduct): Promise<Product> {
     const [record] = await getDrizzleDB().insert(products).values(product).returning()
     return new Product(record.id, record.name, record.description, record.priceInCents, null)
   }
 
-  async update (id: number, product: UpdateProduct): Promise<Product | null> {
+  async update(id: number, product: UpdateProduct): Promise<Product | null> {
     const [record] = await getDrizzleDB()
       .update(products)
       .set({ ...product, updatedAt: new Date() })
@@ -54,21 +54,21 @@ export class ProductRepository {
       record.name,
       record.description,
       record.priceInCents,
-      record.thumbnailReference
+      record.thumbnailReference,
     )
   }
 
-  async setThumbnail (product: Product): Promise<void> {
+  async setThumbnail(product: Product): Promise<void> {
     await getDrizzleDB()
       .update(products)
       .set({
         thumbnailReference: product.thumbnail,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
       .where(eq(products.id, product.id))
   }
 
-  async delete (id: number): Promise<boolean> {
+  async delete(id: number): Promise<boolean> {
     const [record] = await getDrizzleDB()
       .delete(products)
       .where(eq(products.id, id))

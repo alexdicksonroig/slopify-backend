@@ -1,319 +1,965 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Slopify Admin</title>
-  <style>
-    :root { --navy: #182433; --navy-light: #26384d; --blue: #206bc4; --blue-hover: #1a5aa5; --page: #f4f6fa; --border: #dce1e7; --text: #182433; --muted: #667382; --danger: #d63939; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--text); background: var(--page); }
-    * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; }
-    button, input, textarea, select { font: inherit; }
-    button { cursor: pointer; }
-    .shell { min-height: 100vh; display: grid; grid-template-columns: 260px 1fr; }
-    .sidebar { background: var(--navy); color: #b8c2cc; display: flex; flex-direction: column; padding: 1.25rem .75rem; }
-    .brand { display: flex; align-items: center; gap: .7rem; padding: .45rem .65rem 1.5rem; color: white; font-size: 1.15rem; font-weight: 700; letter-spacing: -.02em; }
-    .brand-mark { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 7px; background: var(--blue); font-size: .9rem; }
-    .nav-label { padding: .5rem .65rem; color: #8291a2; font-size: .7rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
-    .nav-item { display: flex; align-items: center; gap: .75rem; padding: .7rem .75rem; margin: .12rem 0; border-radius: 6px; color: #c4ced8; text-decoration: none; font-size: .92rem; }
-    .nav-item.active, .nav-item:hover { background: var(--navy-light); color: white; }
-    .nav-icon { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
-    .content { min-width: 0; }
-    .page { max-width: 1380px; padding: 2rem 2.25rem 3rem; margin: 0 auto; }
-    .breadcrumb { display: flex; align-items: center; gap: .45rem; margin-bottom: .6rem; color: var(--muted); font-size: .82rem; }
-    .breadcrumb span { color: #a1abb7; }
-    .page-heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
-    h1 { margin: 0; font-size: 1.55rem; letter-spacing: -.03em; }
-    .subtitle { margin: .3rem 0 0; color: var(--muted); font-size: .9rem; }
-    .btn { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; border: 1px solid transparent; border-radius: 5px; padding: .55rem .8rem; font-size: .86rem; font-weight: 600; }
-    .btn-primary { background: var(--blue); color: white; }
-    .btn-primary:hover { background: var(--blue-hover); }
-    .btn-outline { color: #405366; background: white; border-color: #cdd5df; }
-    .btn-outline:hover { background: #f4f6fa; }
-    .btn-danger { color: var(--danger); background: white; border-color: #eeb9b9; }
-    .btn-danger:hover { color: white; background: var(--danger); }
-    .btn-icon { width: 31px; height: 31px; padding: 0; }
-    .card { overflow: hidden; background: white; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 2px 5px rgb(24 36 51 / 5%); }
-    .card-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 64px; padding: .85rem 1.15rem; border-bottom: 1px solid var(--border); }
-    .card-heading { display: flex; align-items: baseline; gap: .6rem; }
-    .result-count { color: var(--muted); font-size: .78rem; }
-    .search-wrap { position: relative; }
-    .search-icon { position: absolute; top: 50%; left: .65rem; width: 16px; height: 16px; color: #8793a1; stroke: currentColor; fill: none; stroke-width: 2; transform: translateY(-50%); pointer-events: none; }
-    .search { width: 250px; padding: .5rem .7rem .5rem 2rem; border: 1px solid #cdd5df; border-radius: 5px; outline-color: var(--blue); font-size: .84rem; }
-    table { width: 100%; border-collapse: collapse; }
-    th { padding: .75rem 1.15rem; color: var(--muted); background: #fbfcfd; border-bottom: 1px solid var(--border); font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-align: left; text-transform: uppercase; white-space: nowrap; }
-    td { padding: .9rem 1.15rem; border-bottom: 1px solid #edf0f3; font-size: .88rem; vertical-align: middle; }
-    tr:last-child td { border-bottom: 0; }
-    tbody tr[data-id] { cursor: pointer; }
-    tbody tr:hover { background: #f8fafc; }
-    .product-name { color: #1e5a9e; font-weight: 600; }
-    .description { max-width: 380px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .price { font-variant-numeric: tabular-nums; font-weight: 600; }
-    .actions { display: flex; justify-content: flex-end; gap: .4rem; opacity: .7; transition: opacity .15s; }
-    tr:hover .actions { opacity: 1; }
-    .empty { padding: 4rem 1rem; color: var(--muted); text-align: center; }
-    .empty strong { display: block; margin-bottom: .3rem; color: #405366; font-size: .92rem; }
-    .toast { position: fixed; z-index: 30; right: 1.5rem; bottom: 1.5rem; display: flex; align-items: center; gap: .65rem; min-width: 260px; padding: .8rem 1rem; color: white; background: #2fb344; border-radius: 7px; box-shadow: 0 8px 25px rgb(0 0 0 / 20%); font-size: .86rem; font-weight: 600; animation: toast-in .2s ease-out; }
-    .toast.error { background: var(--danger); }
-    @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } }
-    .modal-backdrop { position: fixed; z-index: 10; inset: 0; display: grid; place-items: center; padding: 1rem; background: rgb(24 36 51 / 48%); }
-    .modal { width: min(100%, 540px); background: white; border-radius: 7px; box-shadow: 0 15px 40px rgb(0 0 0 / 25%); }
-    .modal-header, .modal-footer { display: flex; align-items: center; padding: 1rem 1.25rem; }
-    .modal-header { justify-content: space-between; border-bottom: 1px solid var(--border); }
-    .modal-header h2 { margin: 0; font-size: 1.05rem; }
-    .modal-body { display: grid; gap: 1rem; padding: 1.25rem; }
-    .modal-footer { justify-content: flex-end; gap: .6rem; border-top: 1px solid var(--border); }
-    .close { border: 0; background: transparent; color: var(--muted); font-size: 1.4rem; line-height: 1; }
-    label { display: grid; gap: .4rem; color: #405366; font-size: .84rem; font-weight: 600; }
-    input, textarea, select { width: 100%; padding: .58rem .65rem; border: 1px solid #cdd5df; border-radius: 5px; color: var(--text); background: white; outline-color: var(--blue); }
-    textarea { min-height: 92px; resize: vertical; }
-    .variant-fields { display: grid; gap: .65rem; }
-    .variant-heading { color: #405366; font-size: .84rem; font-weight: 600; }
-    .variant-card { display: grid; gap: .65rem; padding: .8rem; border: 1px solid var(--border); border-radius: 6px; }
-    .variant-card-header { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: .65rem; }
-    .variant-row { display: grid; grid-template-columns: minmax(100px, 1fr) 2fr; align-items: center; gap: .8rem; }
-    .variant-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .thumbnail-preview { display: flex; align-items: center; gap: .8rem; }
-    .thumbnail-preview img { width: 88px; height: 88px; border: 1px solid var(--border); border-radius: 6px; object-fit: contain; }
-    .field-help, #status { margin: 0; color: var(--muted); font-size: .78rem; }
-    #status.error { color: var(--danger); }
-    [hidden] { display: none !important; }
-    @media (max-width: 800px) { .shell { grid-template-columns: 1fr; } .sidebar { display: none; } .page { padding: 1.25rem 1rem; } .page-heading { align-items: flex-start; } .search { width: 100%; } .search-wrap { width: 100%; } .card-header { align-items: flex-start; flex-direction: column; } th:nth-child(3), td:nth-child(3) { display: none; } td, th { padding-left: .75rem; padding-right: .75rem; } .toast { right: 1rem; bottom: 1rem; left: 1rem; } }
-  </style>
-</head>
-<body>
-  <div class="shell">
-    <aside class="sidebar">
-      <div class="brand"><span class="brand-mark">S</span> Slopify Admin</div>
-      <div class="nav-label">Catalog</div>
-      <a class="nav-item active" href="/admin/"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 21v-13l9-5 9 5v13h-6v-6h-6v6z"/></svg>Products</a>
-      <a class="nav-item" href="/admin/product-options"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>Product options</a>
-      <div class="nav-label" style="margin-top: 1rem">System</div>
-      <a class="nav-item" href="/documentation"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 19.5v-15a2 2 0 0 1 2-2h12v19h-12a2 2 0 0 1-2-2z"/><path d="M8 7h6M8 11h6"/></svg>API documentation</a>
-    </aside>
-    <div class="content">
-      <main class="page">
-        <div class="breadcrumb">Catalog <span>›</span> Products</div>
-        <div class="page-heading">
-          <div><h1>Products</h1><p class="subtitle">Manage your catalog, pricing, and product details.</p></div>
-          <button class="btn btn-primary" id="create-product"><span style="font-size:1.1rem;line-height:0">+</span> New product</button>
-        </div>
-        <section class="card">
-          <header class="card-header"><span class="result-count" id="result-count"></span><div class="search-wrap"><svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input class="search" id="search" placeholder="Search by product name…"></div></header>
-          <table>
-            <thead><tr><th>ID</th><th>Product</th><th>Description</th><th>Price</th><th></th></tr></thead>
-            <tbody id="products"><tr><td class="empty" colspan="5"><strong>Loading catalog…</strong>Please wait a moment.</td></tr></tbody>
-          </table>
-        </section>
-      </main>
-    </div>
-  </div>
-  <div class="toast" id="toast" role="status" hidden></div>
-  <div class="modal-backdrop" id="modal-backdrop" hidden>
-    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <header class="modal-header"><h2 id="modal-title">Create product</h2><button class="close" id="close-modal" aria-label="Close">×</button></header>
-      <form id="product-form">
-        <div class="modal-body">
-          <label>Name <input id="name" name="name" required minlength="1" autocomplete="off"></label>
-          <label>Description <textarea id="description" name="description"></textarea></label>
-          <label>Price in euro cents <input id="priceInCents" name="priceInCents" required type="number" min="0" step="1"><span class="field-help">Example: €25.00 is 2500 cents.</span></label>
-          <div class="variant-fields"><span class="variant-heading">Product variants</span><div class="variant-fields" id="product-variants"><span class="field-help">Loading product variants…</span></div></div>
-          <label>Thumbnail <input id="thumbnail" name="thumbnail" type="file" accept="image/jpeg,image/png,image/webp"><span class="field-help">JPEG, PNG, or WebP. Maximum 500 KB.</span></label>
-          <div class="thumbnail-preview" id="thumbnail-preview" hidden><img id="thumbnail-preview-image" alt="Product Thumbnail preview"><button class="btn btn-danger" id="remove-thumbnail" type="button">Remove thumbnail</button></div>
-          <p id="status" role="alert"></p>
-        </div>
-        <footer class="modal-footer"><button class="btn btn-outline" id="cancel" type="button">Cancel</button><button class="btn btn-primary" id="submit" type="submit">Create product</button></footer>
-      </form>
-    </section>
-  </div>
-  <script>
-    const form = document.querySelector('#product-form')
-    const productsBody = document.querySelector('#products')
-    const modal = document.querySelector('#modal-backdrop')
-    const modalTitle = document.querySelector('#modal-title')
-    const submit = document.querySelector('#submit')
-    const status = document.querySelector('#status')
-    const search = document.querySelector('#search')
-    const resultCount = document.querySelector('#result-count')
-    const toast = document.querySelector('#toast')
-    const thumbnailInput = document.querySelector('#thumbnail')
-    const thumbnailPreview = document.querySelector('#thumbnail-preview')
-    const thumbnailPreviewImage = document.querySelector('#thumbnail-preview-image')
-    const removeThumbnailButton = document.querySelector('#remove-thumbnail')
-    const productVariants = document.querySelector('#product-variants')
-    let productOptions = []
-    let loadedProductVariants = []
-    let products = []
-    let toastTimer
-    let editingId = null
-    let removeThumbnail = false
-    let thumbnailObjectUrl = null
-    let currentThumbnailUrl = null
-
-    const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character])
-    const showError = (message) => { status.textContent = message; status.classList.add('error') }
-    const clearError = () => { status.textContent = ''; status.classList.remove('error') }
-    const showToast = (message, isError = false) => { clearTimeout(toastTimer); toast.textContent = message; toast.classList.toggle('error', isError); toast.hidden = false; toastTimer = setTimeout(() => { toast.hidden = true }, 2800) }
-    const formatPrice = (priceInCents) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' }).format(priceInCents / 100)
-    const clearThumbnailObjectUrl = () => { if (thumbnailObjectUrl) URL.revokeObjectURL(thumbnailObjectUrl); thumbnailObjectUrl = null }
-    const showThumbnailPreview = (url) => { thumbnailPreviewImage.src = url; thumbnailPreview.hidden = false }
-    const resetThumbnailEditor = (thumbnailUrl = null) => { clearThumbnailObjectUrl(); thumbnailInput.value = ''; removeThumbnail = false; currentThumbnailUrl = thumbnailUrl; if (thumbnailUrl) showThumbnailPreview(thumbnailUrl); else { thumbnailPreviewImage.removeAttribute('src'); thumbnailPreview.hidden = true } }
-    const productVariantHtml = (variant = { sku: '', selections: [] }) => `<div class="variant-card"${variant.id ? ` data-variant-id="${variant.id}"` : ''}><div class="variant-card-header"><label>SKU <input data-variant-sku required value="${escapeHtml(variant.sku)}" autocomplete="off"${variant.id ? ' readonly' : ''}></label>${variant.id ? '' : '<button class="btn btn-danger" data-action="remove-variant" type="button">Remove</button>'}</div>${productOptions.map((option) => { const selection = variant.selections.find((item) => item.option.id === option.id); return `<label class="variant-row"><span>${escapeHtml(option.label)}</span><select data-option-id="${option.id}"><option value="">Not used</option>${option.possibleValues.map((value) => `<option value="${escapeHtml(value)}"${selection?.value === value ? ' selected' : ''}>${escapeHtml(value)}</option>`).join('')}</select></label>` }).join('')}</div>`
-    const renderProductVariants = (variants) => {
-      productVariants.innerHTML = `${variants.map(productVariantHtml).join('')}<button class="btn btn-outline" data-action="add-variant" type="button">+ Add product variant</button>`
-    }
-    const loadProductVariants = async (productId = null) => {
-      submit.disabled = true
-      productVariants.innerHTML = '<span class="field-help">Loading product variants…</span>'
-      try {
-        const [optionsResponse, variantsResponse] = await Promise.all([
-          fetch('/product-options'),
-          productId ? fetch(`/products/${productId}/variants`) : Promise.resolve(null)
-        ])
-        if (!optionsResponse.ok || (variantsResponse && !variantsResponse.ok)) throw new Error()
-        productOptions = await optionsResponse.json()
-        loadedProductVariants = variantsResponse ? await variantsResponse.json() : []
-        renderProductVariants(loadedProductVariants)
-        submit.disabled = false
-      } catch { productVariants.innerHTML = '<span class="field-help">Could not load product variants.</span>'; showError('Could not load product variants.') }
-    }
-    const closeModal = () => { modal.hidden = true; form.reset(); resetThumbnailEditor(); productVariants.innerHTML = ''; loadedProductVariants = []; submit.disabled = false; editingId = null; clearError() }
-    const openCreate = async () => { editingId = null; form.reset(); resetThumbnailEditor(); clearError(); modalTitle.textContent = 'Create product'; submit.textContent = 'Create product'; modal.hidden = false; form.name.focus(); await loadProductVariants() }
-    const openEdit = async (product) => { editingId = product.id; clearError(); modalTitle.textContent = `Edit product #${product.id}`; submit.textContent = 'Save changes'; form.name.value = product.name; form.description.value = product.description || ''; form.priceInCents.value = product.priceInCents; resetThumbnailEditor(product.thumbnailUrl); modal.hidden = false; form.name.focus(); await loadProductVariants(product.id) }
-
-    const renderProducts = () => {
-      const query = search.value.trim().toLowerCase()
-      const visibleProducts = products.filter((product) => product.name.toLowerCase().includes(query))
-      resultCount.textContent = `${visibleProducts.length} ${visibleProducts.length === 1 ? 'result' : 'results'}`
-      if (!visibleProducts.length) { productsBody.innerHTML = `<tr><td class="empty" colspan="5"><strong>${query ? 'No matching products' : 'Your catalog is empty'}</strong>${query ? 'Try a different search term.' : 'Create your first product to get started.'}</td></tr>`; return }
-      productsBody.innerHTML = visibleProducts.map((product) => `<tr data-id="${product.id}"><td style="color:var(--muted)">#${product.id}</td><td class="product-name">${escapeHtml(product.name)}</td><td class="description">${escapeHtml(product.description) || '—'}</td><td class="price">${formatPrice(product.priceInCents)}</td><td><div class="actions"><button class="btn btn-danger btn-icon" data-action="delete" data-id="${product.id}" aria-label="Delete ${escapeHtml(product.name)}">×</button></div></td></tr>`).join('')
-    }
-
-    const loadProducts = async () => {
-      try { const response = await fetch('/products'); if (!response.ok) throw new Error(); products = await response.json(); renderProducts() }
-      catch { productsBody.innerHTML = '<tr><td class="empty" colspan="5"><strong>Could not load products</strong>Check the API connection and try again.</td></tr>'; showToast('Could not load products.', true) }
-    }
-
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault(); clearError()
-      const data = new FormData(form)
-      const wasEditing = Boolean(editingId)
-      const body = { name: data.get('name'), description: data.get('description') || null, priceInCents: Number(data.get('priceInCents')) }
-      const response = await fetch(editingId ? `/products/${editingId}` : '/products', { method: editingId ? 'PATCH' : 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
-      if (!response.ok) { const error = await response.json().catch(() => ({})); showError(error.message || 'Could not save product.'); return }
-
-      const savedProduct = await response.json()
-      const variants = [...productVariants.querySelectorAll('.variant-card')].map((variant) => ({
-        id: variant.dataset.variantId ? Number(variant.dataset.variantId) : null,
-        sku: variant.querySelector('[data-variant-sku]').value,
-        selections: [...variant.querySelectorAll('select[data-option-id]')]
-          .filter((select) => select.value)
-          .map((select) => ({
-            optionId: Number(select.dataset.optionId),
-            value: select.value
-          }))
-      }))
-      let variantChangeFailed = false
-      try {
-        const initialVariants = new Map(loadedProductVariants.map((variant) => [variant.id, variant]))
-        for (const variant of variants) {
-          let variantId = variant.id
-          if (!variantId) {
-            const createResponse = await fetch(`/products/${savedProduct.id}/variants`, {
-              method: 'POST',
-              headers: { 'content-type': 'application/json' },
-              body: JSON.stringify({ sku: variant.sku })
-            })
-            if (!createResponse.ok) throw new Error()
-            variantId = (await createResponse.json()).id
-          }
-
-          const previousSelections = new Map(
-            (initialVariants.get(variantId)?.selections || [])
-              .map((selection) => [selection.option.id, selection.value])
-          )
-          const nextSelections = new Map(
-            variant.selections.map((selection) => [selection.optionId, selection.value])
-          )
-
-          for (const [optionId, value] of previousSelections) {
-            if (nextSelections.get(optionId) === value) continue
-            const deleteResponse = await fetch(`/product-variants/${variantId}/selections/${optionId}`, { method: 'DELETE' })
-            if (!deleteResponse.ok) throw new Error()
-          }
-          for (const [optionId, value] of nextSelections) {
-            if (previousSelections.get(optionId) === value) continue
-            const addResponse = await fetch(`/product-variants/${variantId}/selections`, {
-              method: 'POST',
-              headers: { 'content-type': 'application/json' },
-              body: JSON.stringify({ optionId, value })
-            })
-            if (!addResponse.ok) throw new Error()
-          }
-        }
-      } catch { variantChangeFailed = true }
-
-      const thumbnail = thumbnailInput.files[0]
-      let thumbnailChangeFailed = false
-      try {
-        let thumbnailResponse = null
-        if (thumbnail) {
-          const thumbnailBody = new FormData(); thumbnailBody.append('thumbnail', thumbnail)
-          thumbnailResponse = await fetch(`/products/${savedProduct.id}/thumbnail`, { method: 'PUT', body: thumbnailBody })
-        } else if (removeThumbnail && wasEditing) {
-          thumbnailResponse = await fetch(`/products/${savedProduct.id}/thumbnail`, { method: 'DELETE' })
-        }
-        thumbnailChangeFailed = Boolean(thumbnailResponse && !thumbnailResponse.ok)
-      } catch { thumbnailChangeFailed = true }
-
-      const message = wasEditing ? 'Product updated successfully.' : 'Product created successfully.'
-      closeModal(); await loadProducts()
-      const failedChanges = [variantChangeFailed && 'variants', thumbnailChangeFailed && 'thumbnail'].filter(Boolean)
-      if (failedChanges.length) return showToast(`${message} Could not update ${failedChanges.join(' and ')}.`, true)
-      showToast(message)
-    })
-
-    productVariants.addEventListener('click', (event) => {
-      const button = event.target.closest('button[data-action]')
-      if (!button) return
-      if (button.dataset.action === 'remove-variant') button.closest('.variant-card').remove()
-      if (button.dataset.action === 'add-variant') {
-        const firstVariant = productVariants.querySelector('.variant-card')
-        const selections = firstVariant
-          ? [...firstVariant.querySelectorAll('select[data-option-id]')]
-              .filter((select) => select.value)
-              .map((select) => ({ option: { id: Number(select.dataset.optionId) }, value: select.value }))
-          : []
-        button.insertAdjacentHTML('beforebegin', productVariantHtml({ sku: '', selections }))
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Slopify Admin</title>
+    <style>
+      :root {
+        --navy: #182433;
+        --navy-light: #26384d;
+        --blue: #206bc4;
+        --blue-hover: #1a5aa5;
+        --page: #f4f6fa;
+        --border: #dce1e7;
+        --text: #182433;
+        --muted: #667382;
+        --danger: #d63939;
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        color: var(--text);
+        background: var(--page);
       }
-    })
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+      }
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      .shell {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: 260px 1fr;
+      }
+      .sidebar {
+        background: var(--navy);
+        color: #b8c2cc;
+        display: flex;
+        flex-direction: column;
+        padding: 1.25rem 0.75rem;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        padding: 0.45rem 0.65rem 1.5rem;
+        color: white;
+        font-size: 1.15rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      .brand-mark {
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 7px;
+        background: var(--blue);
+        font-size: 0.9rem;
+      }
+      .nav-label {
+        padding: 0.5rem 0.65rem;
+        color: #8291a2;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+      }
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.7rem 0.75rem;
+        margin: 0.12rem 0;
+        border-radius: 6px;
+        color: #c4ced8;
+        text-decoration: none;
+        font-size: 0.92rem;
+      }
+      .nav-item.active,
+      .nav-item:hover {
+        background: var(--navy-light);
+        color: white;
+      }
+      .nav-icon {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+      }
+      .content {
+        min-width: 0;
+      }
+      .page {
+        max-width: 1380px;
+        padding: 2rem 2.25rem 3rem;
+        margin: 0 auto;
+      }
+      .breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        margin-bottom: 0.6rem;
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+      .breadcrumb span {
+        color: #a1abb7;
+      }
+      .page-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+      h1 {
+        margin: 0;
+        font-size: 1.55rem;
+        letter-spacing: -0.03em;
+      }
+      .subtitle {
+        margin: 0.3rem 0 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        border: 1px solid transparent;
+        border-radius: 5px;
+        padding: 0.55rem 0.8rem;
+        font-size: 0.86rem;
+        font-weight: 600;
+      }
+      .btn-primary {
+        background: var(--blue);
+        color: white;
+      }
+      .btn-primary:hover {
+        background: var(--blue-hover);
+      }
+      .btn-outline {
+        color: #405366;
+        background: white;
+        border-color: #cdd5df;
+      }
+      .btn-outline:hover {
+        background: #f4f6fa;
+      }
+      .btn-danger {
+        color: var(--danger);
+        background: white;
+        border-color: #eeb9b9;
+      }
+      .btn-danger:hover {
+        color: white;
+        background: var(--danger);
+      }
+      .btn-icon {
+        width: 31px;
+        height: 31px;
+        padding: 0;
+      }
+      .card {
+        overflow: hidden;
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgb(24 36 51 / 5%);
+      }
+      .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        min-height: 64px;
+        padding: 0.85rem 1.15rem;
+        border-bottom: 1px solid var(--border);
+      }
+      .card-heading {
+        display: flex;
+        align-items: baseline;
+        gap: 0.6rem;
+      }
+      .result-count {
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+      .search-wrap {
+        position: relative;
+      }
+      .search-icon {
+        position: absolute;
+        top: 50%;
+        left: 0.65rem;
+        width: 16px;
+        height: 16px;
+        color: #8793a1;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        transform: translateY(-50%);
+        pointer-events: none;
+      }
+      .search {
+        width: 250px;
+        padding: 0.5rem 0.7rem 0.5rem 2rem;
+        border: 1px solid #cdd5df;
+        border-radius: 5px;
+        outline-color: var(--blue);
+        font-size: 0.84rem;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th {
+        padding: 0.75rem 1.15rem;
+        color: var(--muted);
+        background: #fbfcfd;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-align: left;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+      td {
+        padding: 0.9rem 1.15rem;
+        border-bottom: 1px solid #edf0f3;
+        font-size: 0.88rem;
+        vertical-align: middle;
+      }
+      tr:last-child td {
+        border-bottom: 0;
+      }
+      tbody tr[data-id] {
+        cursor: pointer;
+      }
+      tbody tr:hover {
+        background: #f8fafc;
+      }
+      .product-name {
+        color: #1e5a9e;
+        font-weight: 600;
+      }
+      .description {
+        max-width: 380px;
+        color: var(--muted);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .price {
+        font-variant-numeric: tabular-nums;
+        font-weight: 600;
+      }
+      .actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.4rem;
+        opacity: 0.7;
+        transition: opacity 0.15s;
+      }
+      tr:hover .actions {
+        opacity: 1;
+      }
+      .empty {
+        padding: 4rem 1rem;
+        color: var(--muted);
+        text-align: center;
+      }
+      .empty strong {
+        display: block;
+        margin-bottom: 0.3rem;
+        color: #405366;
+        font-size: 0.92rem;
+      }
+      .toast {
+        position: fixed;
+        z-index: 30;
+        right: 1.5rem;
+        bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        min-width: 260px;
+        padding: 0.8rem 1rem;
+        color: white;
+        background: #2fb344;
+        border-radius: 7px;
+        box-shadow: 0 8px 25px rgb(0 0 0 / 20%);
+        font-size: 0.86rem;
+        font-weight: 600;
+        animation: toast-in 0.2s ease-out;
+      }
+      .toast.error {
+        background: var(--danger);
+      }
+      @keyframes toast-in {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+      }
+      .modal-backdrop {
+        position: fixed;
+        z-index: 10;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: 1rem;
+        background: rgb(24 36 51 / 48%);
+      }
+      .modal {
+        width: min(100%, 540px);
+        background: white;
+        border-radius: 7px;
+        box-shadow: 0 15px 40px rgb(0 0 0 / 25%);
+      }
+      .modal-header,
+      .modal-footer {
+        display: flex;
+        align-items: center;
+        padding: 1rem 1.25rem;
+      }
+      .modal-header {
+        justify-content: space-between;
+        border-bottom: 1px solid var(--border);
+      }
+      .modal-header h2 {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+      .modal-body {
+        display: grid;
+        gap: 1rem;
+        padding: 1.25rem;
+      }
+      .modal-footer {
+        justify-content: flex-end;
+        gap: 0.6rem;
+        border-top: 1px solid var(--border);
+      }
+      .close {
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        font-size: 1.4rem;
+        line-height: 1;
+      }
+      label {
+        display: grid;
+        gap: 0.4rem;
+        color: #405366;
+        font-size: 0.84rem;
+        font-weight: 600;
+      }
+      input,
+      textarea,
+      select {
+        width: 100%;
+        padding: 0.58rem 0.65rem;
+        border: 1px solid #cdd5df;
+        border-radius: 5px;
+        color: var(--text);
+        background: white;
+        outline-color: var(--blue);
+      }
+      textarea {
+        min-height: 92px;
+        resize: vertical;
+      }
+      .variant-fields {
+        display: grid;
+        gap: 0.65rem;
+      }
+      .variant-heading {
+        color: #405366;
+        font-size: 0.84rem;
+        font-weight: 600;
+      }
+      .variant-card {
+        display: grid;
+        gap: 0.65rem;
+        padding: 0.8rem;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+      }
+      .variant-card-header {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: end;
+        gap: 0.65rem;
+      }
+      .variant-row {
+        display: grid;
+        grid-template-columns: minmax(100px, 1fr) 2fr;
+        align-items: center;
+        gap: 0.8rem;
+      }
+      .variant-row span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .thumbnail-preview {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+      }
+      .thumbnail-preview img {
+        width: 88px;
+        height: 88px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        object-fit: contain;
+      }
+      .field-help,
+      #status {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+      #status.error {
+        color: var(--danger);
+      }
+      [hidden] {
+        display: none !important;
+      }
+      @media (max-width: 800px) {
+        .shell {
+          grid-template-columns: 1fr;
+        }
+        .sidebar {
+          display: none;
+        }
+        .page {
+          padding: 1.25rem 1rem;
+        }
+        .page-heading {
+          align-items: flex-start;
+        }
+        .search {
+          width: 100%;
+        }
+        .search-wrap {
+          width: 100%;
+        }
+        .card-header {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+        th:nth-child(3),
+        td:nth-child(3) {
+          display: none;
+        }
+        td,
+        th {
+          padding-left: 0.75rem;
+          padding-right: 0.75rem;
+        }
+        .toast {
+          right: 1rem;
+          bottom: 1rem;
+          left: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="brand"><span class="brand-mark">S</span> Slopify Admin</div>
+        <div class="nav-label">Catalog</div>
+        <a class="nav-item active" href="/admin/"
+          ><svg class="nav-icon" viewBox="0 0 24 24">
+            <path d="M3 21v-13l9-5 9 5v13h-6v-6h-6v6z" /></svg
+          >Products</a
+        >
+        <a class="nav-item" href="/admin/product-options"
+          ><svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" /></svg
+          >Product options</a
+        >
+        <div class="nav-label" style="margin-top: 1rem">System</div>
+        <a class="nav-item" href="/documentation"
+          ><svg class="nav-icon" viewBox="0 0 24 24">
+            <path d="M4 19.5v-15a2 2 0 0 1 2-2h12v19h-12a2 2 0 0 1-2-2z" />
+            <path d="M8 7h6M8 11h6" /></svg
+          >API documentation</a
+        >
+      </aside>
+      <div class="content">
+        <main class="page">
+          <div class="breadcrumb">Catalog <span>›</span> Products</div>
+          <div class="page-heading">
+            <div>
+              <h1>Products</h1>
+              <p class="subtitle">Manage your catalog, pricing, and product details.</p>
+            </div>
+            <button class="btn btn-primary" id="create-product">
+              <span style="font-size: 1.1rem; line-height: 0">+</span> New product
+            </button>
+          </div>
+          <section class="card">
+            <header class="card-header">
+              <span class="result-count" id="result-count"></span>
+              <div class="search-wrap">
+                <svg class="search-icon" viewBox="0 0 24 24">
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m20 20-4-4" /></svg
+                ><input class="search" id="search" placeholder="Search by product name…" />
+              </div>
+            </header>
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Product</th>
+                  <th>Description</th>
+                  <th>Price</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="products">
+                <tr>
+                  <td class="empty" colspan="5">
+                    <strong>Loading catalog…</strong>Please wait a moment.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+        </main>
+      </div>
+    </div>
+    <div class="toast" id="toast" role="status" hidden></div>
+    <div class="modal-backdrop" id="modal-backdrop" hidden>
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <header class="modal-header">
+          <h2 id="modal-title">Create product</h2>
+          <button class="close" id="close-modal" aria-label="Close">×</button>
+        </header>
+        <form id="product-form">
+          <div class="modal-body">
+            <label
+              >Name <input id="name" name="name" required minlength="1" autocomplete="off"
+            /></label>
+            <label>Description <textarea id="description" name="description"></textarea></label>
+            <label
+              >Price in euro cents
+              <input
+                id="priceInCents"
+                name="priceInCents"
+                required
+                type="number"
+                min="0"
+                step="1"
+              /><span class="field-help">Example: €25.00 is 2500 cents.</span></label
+            >
+            <div class="variant-fields">
+              <span class="variant-heading">Product variants</span>
+              <div class="variant-fields" id="product-variants">
+                <span class="field-help">Loading product variants…</span>
+              </div>
+            </div>
+            <label
+              >Thumbnail
+              <input
+                id="thumbnail"
+                name="thumbnail"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+              /><span class="field-help">JPEG, PNG, or WebP. Maximum 500 KB.</span></label
+            >
+            <div class="thumbnail-preview" id="thumbnail-preview" hidden>
+              <img id="thumbnail-preview-image" alt="Product Thumbnail preview" /><button
+                class="btn btn-danger"
+                id="remove-thumbnail"
+                type="button"
+              >
+                Remove thumbnail
+              </button>
+            </div>
+            <p id="status" role="alert"></p>
+          </div>
+          <footer class="modal-footer">
+            <button class="btn btn-outline" id="cancel" type="button">Cancel</button
+            ><button class="btn btn-primary" id="submit" type="submit">Create product</button>
+          </footer>
+        </form>
+      </section>
+    </div>
+    <script>
+      const form = document.querySelector("#product-form")
+      const productsBody = document.querySelector("#products")
+      const modal = document.querySelector("#modal-backdrop")
+      const modalTitle = document.querySelector("#modal-title")
+      const submit = document.querySelector("#submit")
+      const status = document.querySelector("#status")
+      const search = document.querySelector("#search")
+      const resultCount = document.querySelector("#result-count")
+      const toast = document.querySelector("#toast")
+      const thumbnailInput = document.querySelector("#thumbnail")
+      const thumbnailPreview = document.querySelector("#thumbnail-preview")
+      const thumbnailPreviewImage = document.querySelector("#thumbnail-preview-image")
+      const removeThumbnailButton = document.querySelector("#remove-thumbnail")
+      const productVariants = document.querySelector("#product-variants")
+      let productOptions = []
+      let loadedProductVariants = []
+      let products = []
+      let toastTimer
+      let editingId = null
+      let removeThumbnail = false
+      let thumbnailObjectUrl = null
+      let currentThumbnailUrl = null
 
-    productsBody.addEventListener('click', async (event) => {
-      const button = event.target.closest('button')
-      const row = event.target.closest('tr[data-id]'); if (!row) return
-      const product = products.find((item) => item.id === Number(row.dataset.id)); if (!product) return
-      if (!button) return openEdit(product)
-      if (!confirm(`Delete “${product.name}”? This cannot be undone.`)) return
-      const response = await fetch(`/products/${product.id}`, { method: 'DELETE' })
-      if (!response.ok) return showToast('Could not delete product.', true)
-      await loadProducts(); showToast('Product deleted successfully.')
-    })
+      const escapeHtml = (value) =>
+        String(value ?? "").replace(
+          /[&<>'"]/g,
+          (character) =>
+            ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character],
+        )
+      const showError = (message) => {
+        status.textContent = message
+        status.classList.add("error")
+      }
+      const clearError = () => {
+        status.textContent = ""
+        status.classList.remove("error")
+      }
+      const showToast = (message, isError = false) => {
+        clearTimeout(toastTimer)
+        toast.textContent = message
+        toast.classList.toggle("error", isError)
+        toast.hidden = false
+        toastTimer = setTimeout(() => {
+          toast.hidden = true
+        }, 2800)
+      }
+      const formatPrice = (priceInCents) =>
+        new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(
+          priceInCents / 100,
+        )
+      const clearThumbnailObjectUrl = () => {
+        if (thumbnailObjectUrl) URL.revokeObjectURL(thumbnailObjectUrl)
+        thumbnailObjectUrl = null
+      }
+      const showThumbnailPreview = (url) => {
+        thumbnailPreviewImage.src = url
+        thumbnailPreview.hidden = false
+      }
+      const resetThumbnailEditor = (thumbnailUrl = null) => {
+        clearThumbnailObjectUrl()
+        thumbnailInput.value = ""
+        removeThumbnail = false
+        currentThumbnailUrl = thumbnailUrl
+        if (thumbnailUrl) showThumbnailPreview(thumbnailUrl)
+        else {
+          thumbnailPreviewImage.removeAttribute("src")
+          thumbnailPreview.hidden = true
+        }
+      }
+      const productVariantHtml = (variant = { sku: "", selections: [] }) =>
+        `<div class="variant-card"${variant.id ? ` data-variant-id="${variant.id}"` : ""}><div class="variant-card-header"><label>SKU <input data-variant-sku required value="${escapeHtml(variant.sku)}" autocomplete="off"${variant.id ? " readonly" : ""}></label>${variant.id ? "" : '<button class="btn btn-danger" data-action="remove-variant" type="button">Remove</button>'}</div>${productOptions
+          .map((option) => {
+            const selection = variant.selections.find((item) => item.option.id === option.id)
+            return `<label class="variant-row"><span>${escapeHtml(option.label)}</span><select data-option-id="${option.id}"><option value="">Not used</option>${option.possibleValues.map((value) => `<option value="${escapeHtml(value)}"${selection?.value === value ? " selected" : ""}>${escapeHtml(value)}</option>`).join("")}</select></label>`
+          })
+          .join("")}</div>`
+      const renderProductVariants = (variants) => {
+        productVariants.innerHTML = `${variants.map(productVariantHtml).join("")}<button class="btn btn-outline" data-action="add-variant" type="button">+ Add product variant</button>`
+      }
+      const loadProductVariants = async (productId = null) => {
+        submit.disabled = true
+        productVariants.innerHTML = '<span class="field-help">Loading product variants…</span>'
+        try {
+          const [optionsResponse, variantsResponse] = await Promise.all([
+            fetch("/product-options"),
+            productId ? fetch(`/products/${productId}/variants`) : Promise.resolve(null),
+          ])
+          if (!optionsResponse.ok || (variantsResponse && !variantsResponse.ok)) throw new Error()
+          productOptions = await optionsResponse.json()
+          loadedProductVariants = variantsResponse ? await variantsResponse.json() : []
+          renderProductVariants(loadedProductVariants)
+          submit.disabled = false
+        } catch {
+          productVariants.innerHTML =
+            '<span class="field-help">Could not load product variants.</span>'
+          showError("Could not load product variants.")
+        }
+      }
+      const closeModal = () => {
+        modal.hidden = true
+        form.reset()
+        resetThumbnailEditor()
+        productVariants.innerHTML = ""
+        loadedProductVariants = []
+        submit.disabled = false
+        editingId = null
+        clearError()
+      }
+      const openCreate = async () => {
+        editingId = null
+        form.reset()
+        resetThumbnailEditor()
+        clearError()
+        modalTitle.textContent = "Create product"
+        submit.textContent = "Create product"
+        modal.hidden = false
+        form.name.focus()
+        await loadProductVariants()
+      }
+      const openEdit = async (product) => {
+        editingId = product.id
+        clearError()
+        modalTitle.textContent = `Edit product #${product.id}`
+        submit.textContent = "Save changes"
+        form.name.value = product.name
+        form.description.value = product.description || ""
+        form.priceInCents.value = product.priceInCents
+        resetThumbnailEditor(product.thumbnailUrl)
+        modal.hidden = false
+        form.name.focus()
+        await loadProductVariants(product.id)
+      }
 
-    thumbnailInput.addEventListener('change', () => {
-      clearError(); clearThumbnailObjectUrl(); removeThumbnail = false
-      const file = thumbnailInput.files[0]
-      if (!file) { if (currentThumbnailUrl) showThumbnailPreview(currentThumbnailUrl); else thumbnailPreview.hidden = true; return }
-      if (file.size > 500000) { thumbnailInput.value = ''; showError('Product Thumbnail must not exceed 500 KB.'); if (currentThumbnailUrl) showThumbnailPreview(currentThumbnailUrl); else thumbnailPreview.hidden = true; return }
-      thumbnailObjectUrl = URL.createObjectURL(file); showThumbnailPreview(thumbnailObjectUrl)
-    })
-    removeThumbnailButton.addEventListener('click', () => { clearThumbnailObjectUrl(); thumbnailInput.value = ''; removeThumbnail = Boolean(currentThumbnailUrl); thumbnailPreviewImage.removeAttribute('src'); thumbnailPreview.hidden = true })
+      const renderProducts = () => {
+        const query = search.value.trim().toLowerCase()
+        const visibleProducts = products.filter((product) =>
+          product.name.toLowerCase().includes(query),
+        )
+        resultCount.textContent = `${visibleProducts.length} ${visibleProducts.length === 1 ? "result" : "results"}`
+        if (!visibleProducts.length) {
+          productsBody.innerHTML = `<tr><td class="empty" colspan="5"><strong>${query ? "No matching products" : "Your catalog is empty"}</strong>${query ? "Try a different search term." : "Create your first product to get started."}</td></tr>`
+          return
+        }
+        productsBody.innerHTML = visibleProducts
+          .map(
+            (product) =>
+              `<tr data-id="${product.id}"><td style="color:var(--muted)">#${product.id}</td><td class="product-name">${escapeHtml(product.name)}</td><td class="description">${escapeHtml(product.description) || "—"}</td><td class="price">${formatPrice(product.priceInCents)}</td><td><div class="actions"><button class="btn btn-danger btn-icon" data-action="delete" data-id="${product.id}" aria-label="Delete ${escapeHtml(product.name)}">×</button></div></td></tr>`,
+          )
+          .join("")
+      }
 
-    document.querySelector('#create-product').addEventListener('click', openCreate)
-    document.querySelector('#close-modal').addEventListener('click', closeModal)
-    document.querySelector('#cancel').addEventListener('click', closeModal)
-    search.addEventListener('input', renderProducts)
-    document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !modal.hidden) closeModal() })
-    loadProducts()
-  </script>
-</body>
+      const loadProducts = async () => {
+        try {
+          const response = await fetch("/products")
+          if (!response.ok) throw new Error()
+          products = await response.json()
+          renderProducts()
+        } catch {
+          productsBody.innerHTML =
+            '<tr><td class="empty" colspan="5"><strong>Could not load products</strong>Check the API connection and try again.</td></tr>'
+          showToast("Could not load products.", true)
+        }
+      }
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault()
+        clearError()
+        const data = new FormData(form)
+        const wasEditing = Boolean(editingId)
+        const body = {
+          name: data.get("name"),
+          description: data.get("description") || null,
+          priceInCents: Number(data.get("priceInCents")),
+        }
+        const response = await fetch(editingId ? `/products/${editingId}` : "/products", {
+          method: editingId ? "PATCH" : "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(body),
+        })
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({}))
+          showError(error.message || "Could not save product.")
+          return
+        }
+
+        const savedProduct = await response.json()
+        const variants = [...productVariants.querySelectorAll(".variant-card")].map((variant) => ({
+          id: variant.dataset.variantId ? Number(variant.dataset.variantId) : null,
+          sku: variant.querySelector("[data-variant-sku]").value,
+          selections: [...variant.querySelectorAll("select[data-option-id]")]
+            .filter((select) => select.value)
+            .map((select) => ({
+              optionId: Number(select.dataset.optionId),
+              value: select.value,
+            })),
+        }))
+        let variantChangeFailed = false
+        try {
+          const initialVariants = new Map(
+            loadedProductVariants.map((variant) => [variant.id, variant]),
+          )
+          for (const variant of variants) {
+            let variantId = variant.id
+            if (!variantId) {
+              const createResponse = await fetch(`/products/${savedProduct.id}/variants`, {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ sku: variant.sku }),
+              })
+              if (!createResponse.ok) throw new Error()
+              variantId = (await createResponse.json()).id
+            }
+
+            const previousSelections = new Map(
+              (initialVariants.get(variantId)?.selections || []).map((selection) => [
+                selection.option.id,
+                selection.value,
+              ]),
+            )
+            const nextSelections = new Map(
+              variant.selections.map((selection) => [selection.optionId, selection.value]),
+            )
+
+            for (const [optionId, value] of previousSelections) {
+              if (nextSelections.get(optionId) === value) continue
+              const deleteResponse = await fetch(
+                `/product-variants/${variantId}/selections/${optionId}`,
+                { method: "DELETE" },
+              )
+              if (!deleteResponse.ok) throw new Error()
+            }
+            for (const [optionId, value] of nextSelections) {
+              if (previousSelections.get(optionId) === value) continue
+              const addResponse = await fetch(`/product-variants/${variantId}/selections`, {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ optionId, value }),
+              })
+              if (!addResponse.ok) throw new Error()
+            }
+          }
+        } catch {
+          variantChangeFailed = true
+        }
+
+        const thumbnail = thumbnailInput.files[0]
+        let thumbnailChangeFailed = false
+        try {
+          let thumbnailResponse = null
+          if (thumbnail) {
+            const thumbnailBody = new FormData()
+            thumbnailBody.append("thumbnail", thumbnail)
+            thumbnailResponse = await fetch(`/products/${savedProduct.id}/thumbnail`, {
+              method: "PUT",
+              body: thumbnailBody,
+            })
+          } else if (removeThumbnail && wasEditing) {
+            thumbnailResponse = await fetch(`/products/${savedProduct.id}/thumbnail`, {
+              method: "DELETE",
+            })
+          }
+          thumbnailChangeFailed = Boolean(thumbnailResponse && !thumbnailResponse.ok)
+        } catch {
+          thumbnailChangeFailed = true
+        }
+
+        const message = wasEditing
+          ? "Product updated successfully."
+          : "Product created successfully."
+        closeModal()
+        await loadProducts()
+        const failedChanges = [
+          variantChangeFailed && "variants",
+          thumbnailChangeFailed && "thumbnail",
+        ].filter(Boolean)
+        if (failedChanges.length)
+          return showToast(`${message} Could not update ${failedChanges.join(" and ")}.`, true)
+        showToast(message)
+      })
+
+      productVariants.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-action]")
+        if (!button) return
+        if (button.dataset.action === "remove-variant") button.closest(".variant-card").remove()
+        if (button.dataset.action === "add-variant") {
+          const firstVariant = productVariants.querySelector(".variant-card")
+          const selections = firstVariant
+            ? [...firstVariant.querySelectorAll("select[data-option-id]")]
+                .filter((select) => select.value)
+                .map((select) => ({
+                  option: { id: Number(select.dataset.optionId) },
+                  value: select.value,
+                }))
+            : []
+          button.insertAdjacentHTML("beforebegin", productVariantHtml({ sku: "", selections }))
+        }
+      })
+
+      productsBody.addEventListener("click", async (event) => {
+        const button = event.target.closest("button")
+        const row = event.target.closest("tr[data-id]")
+        if (!row) return
+        const product = products.find((item) => item.id === Number(row.dataset.id))
+        if (!product) return
+        if (!button) return openEdit(product)
+        if (!confirm(`Delete “${product.name}”? This cannot be undone.`)) return
+        const response = await fetch(`/products/${product.id}`, { method: "DELETE" })
+        if (!response.ok) return showToast("Could not delete product.", true)
+        await loadProducts()
+        showToast("Product deleted successfully.")
+      })
+
+      thumbnailInput.addEventListener("change", () => {
+        clearError()
+        clearThumbnailObjectUrl()
+        removeThumbnail = false
+        const file = thumbnailInput.files[0]
+        if (!file) {
+          if (currentThumbnailUrl) showThumbnailPreview(currentThumbnailUrl)
+          else thumbnailPreview.hidden = true
+          return
+        }
+        if (file.size > 500000) {
+          thumbnailInput.value = ""
+          showError("Product Thumbnail must not exceed 500 KB.")
+          if (currentThumbnailUrl) showThumbnailPreview(currentThumbnailUrl)
+          else thumbnailPreview.hidden = true
+          return
+        }
+        thumbnailObjectUrl = URL.createObjectURL(file)
+        showThumbnailPreview(thumbnailObjectUrl)
+      })
+      removeThumbnailButton.addEventListener("click", () => {
+        clearThumbnailObjectUrl()
+        thumbnailInput.value = ""
+        removeThumbnail = Boolean(currentThumbnailUrl)
+        thumbnailPreviewImage.removeAttribute("src")
+        thumbnailPreview.hidden = true
+      })
+
+      document.querySelector("#create-product").addEventListener("click", openCreate)
+      document.querySelector("#close-modal").addEventListener("click", closeModal)
+      document.querySelector("#cancel").addEventListener("click", closeModal)
+      search.addEventListener("input", renderProducts)
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !modal.hidden) closeModal()
+      })
+      loadProducts()
+    </script>
+  </body>
 </html>

@@ -1,18 +1,14 @@
-import { getDrizzleDB } from '@database'
-import { and, eq } from 'drizzle-orm'
-import { ProductOption } from '../../../domain/options/product-option.entity'
+import { getDrizzleDB } from "@database"
+import { and, eq } from "drizzle-orm"
+import { ProductOption } from "../../../domain/options/product-option.entity"
 import {
   ProductVariant,
-  type ProductOptionSelection
-} from '../../../domain/variants/product-variant.entity'
-import {
-  productOptions,
-  productVariants,
-  selectedOptions
-} from '../schema'
+  type ProductOptionSelection,
+} from "../../../domain/variants/product-variant.entity"
+import { productOptions, productVariants, selectedOptions } from "../schema"
 
 class VariantRepository {
-  async findForProduct (productId: number): Promise<ProductVariant[]> {
+  async findForProduct(productId: number): Promise<ProductVariant[]> {
     const records = await getDrizzleDB()
       .select({
         productVariantId: productVariants.id,
@@ -21,17 +17,11 @@ class VariantRepository {
         optionId: productOptions.id,
         possibleValues: productOptions.possibleValues,
         label: productOptions.label,
-        value: selectedOptions.value
+        value: selectedOptions.value,
       })
       .from(productVariants)
-      .leftJoin(
-        selectedOptions,
-        eq(selectedOptions.productVariantId, productVariants.id)
-      )
-      .leftJoin(
-        productOptions,
-        eq(productOptions.id, selectedOptions.productOptionId)
-      )
+      .leftJoin(selectedOptions, eq(selectedOptions.productVariantId, productVariants.id))
+      .leftJoin(productOptions, eq(productOptions.id, selectedOptions.productOptionId))
       .where(eq(productVariants.productId, productId))
       .orderBy(productVariants.id, productOptions.id)
 
@@ -39,12 +29,7 @@ class VariantRepository {
     for (const record of records) {
       let variant = variants.get(record.productVariantId)
       if (!variant) {
-        variant = new ProductVariant(
-          record.productVariantId,
-          record.productId,
-          record.sku,
-          []
-        )
+        variant = new ProductVariant(record.productVariantId, record.productId, record.sku, [])
         variants.set(record.productVariantId, variant)
       }
 
@@ -55,12 +40,8 @@ class VariantRepository {
         record.value !== null
       ) {
         const selection: ProductOptionSelection = {
-          option: new ProductOption(
-            record.optionId,
-            record.possibleValues,
-            record.label
-          ),
-          value: record.value
+          option: new ProductOption(record.optionId, record.possibleValues, record.label),
+          value: record.value,
         }
         variant.selections.push(selection)
       }
@@ -69,10 +50,7 @@ class VariantRepository {
     return [...variants.values()]
   }
 
-  async createVariant (
-    productId: number,
-    sku: string
-  ): Promise<ProductVariant> {
+  async createVariant(productId: number, sku: string): Promise<ProductVariant> {
     const [record] = await getDrizzleDB()
       .insert(productVariants)
       .values({ productId, sku })
@@ -81,30 +59,23 @@ class VariantRepository {
     return new ProductVariant(record.id, productId, sku, [])
   }
 
-  async addSelection (
-    variantId: number,
-    optionId: number,
-    value: string
-  ): Promise<void> {
-    await getDrizzleDB()
-      .insert(selectedOptions)
-      .values({
-        productVariantId: variantId,
-        productOptionId: optionId,
-        value
-      })
+  async addSelection(variantId: number, optionId: number, value: string): Promise<void> {
+    await getDrizzleDB().insert(selectedOptions).values({
+      productVariantId: variantId,
+      productOptionId: optionId,
+      value,
+    })
   }
 
-  async deleteSelection (
-    variantId: number,
-    optionId: number
-  ): Promise<void> {
+  async deleteSelection(variantId: number, optionId: number): Promise<void> {
     await getDrizzleDB()
       .delete(selectedOptions)
-      .where(and(
-        eq(selectedOptions.productVariantId, variantId),
-        eq(selectedOptions.productOptionId, optionId)
-      ))
+      .where(
+        and(
+          eq(selectedOptions.productVariantId, variantId),
+          eq(selectedOptions.productOptionId, optionId),
+        ),
+      )
   }
 }
 

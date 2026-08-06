@@ -1,6 +1,6 @@
-import sharp from 'sharp'
+import sharp from "sharp"
 
-const DEFAULT_BACKGROUND_COLOR = '#ffffff'
+const DEFAULT_BACKGROUND_COLOR = "#ffffff"
 const DEFAULT_QUALITY = 80
 
 export const productThumbnailImageAdapter = {
@@ -13,11 +13,11 @@ export const productThumbnailImageAdapter = {
       .resize({
         width: size,
         height: size,
-        fit: 'contain',
-        background: DEFAULT_BACKGROUND_COLOR
+        fit: "contain",
+        background: DEFAULT_BACKGROUND_COLOR,
       })
       .flatten({ background: DEFAULT_BACKGROUND_COLOR })
       .webp({ quality: DEFAULT_QUALITY })
       .toBuffer()
-  }
+  },
 }

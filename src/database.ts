@@ -1,5 +1,5 @@
-import { drizzle } from 'drizzle-orm/postgres-js'
-import postgres, { type Sql } from 'postgres'
+import { drizzle } from "drizzle-orm/postgres-js"
+import postgres, { type Sql } from "postgres"
 
 export type Database = ReturnType<typeof drizzle>
 
@@ -10,7 +10,7 @@ export const initDrizzleDB = async (): Promise<void> => {
   if (db) return
 
   const databaseUrl = process.env.DATABASE_URL
-  if (!databaseUrl) throw new Error('DATABASE_URL is required')
+  if (!databaseUrl) throw new Error("DATABASE_URL is required")
 
   client = postgres(databaseUrl)
   db = drizzle(client)
@@ -24,7 +24,7 @@ export const initDrizzleDB = async (): Promise<void> => {
 }
 
 export const getDrizzleDB = (): Database => {
-  if (!db) throw new Error('Database has not been initialized')
+  if (!db) throw new Error("Database has not been initialized")
   return db
 }
 

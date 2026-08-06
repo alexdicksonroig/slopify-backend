@@ -1,21 +1,21 @@
 export class Product {
   thumbnail: string | null
 
-  constructor (
+  constructor(
     readonly id: number,
     readonly name: string,
     readonly description: string | null,
     readonly priceInCents: number,
-    thumbnailReference: string | null
+    thumbnailReference: string | null,
   ) {
     this.thumbnail = thumbnailReference
   }
 
-  replaceThumbnail (reference: string): void {
+  replaceThumbnail(reference: string): void {
     this.thumbnail = reference
   }
 
-  removeThumbnail (): void {
+  removeThumbnail(): void {
     this.thumbnail = null
   }
 }

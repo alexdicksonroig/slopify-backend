@@ -1,11 +1,7 @@
-import { variantRepository } from '../../infrastructure/persistence/variants/variant.repository'
+import { variantRepository } from "../../infrastructure/persistence/variants/variant.repository"
 
 export class AddProductVariantSelectionUseCase {
-  async execute (
-    variantId: number,
-    optionId: number,
-    value: string
-  ): Promise<void> {
+  async execute(variantId: number, optionId: number, value: string): Promise<void> {
     await variantRepository.addSelection(variantId, optionId, value)
   }
 }

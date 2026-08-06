@@ -1,155 +1,585 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Product Options · Slopify Admin</title>
-  <style>
-    :root { --navy: #182433; --navy-light: #26384d; --blue: #206bc4; --blue-hover: #1a5aa5; --page: #f4f6fa; --border: #dce1e7; --text: #182433; --muted: #667382; --danger: #d63939; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--text); background: var(--page); }
-    * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; }
-    button, input, textarea { font: inherit; }
-    button { cursor: pointer; }
-    .shell { min-height: 100vh; display: grid; grid-template-columns: 260px 1fr; }
-    .sidebar { background: var(--navy); color: #b8c2cc; display: flex; flex-direction: column; padding: 1.25rem .75rem; }
-    .brand { display: flex; align-items: center; gap: .7rem; padding: .45rem .65rem 1.5rem; color: white; font-size: 1.15rem; font-weight: 700; letter-spacing: -.02em; }
-    .brand-mark { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 7px; background: var(--blue); font-size: .9rem; }
-    .nav-label { padding: .5rem .65rem; color: #8291a2; font-size: .7rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
-    .nav-item { display: flex; align-items: center; gap: .75rem; padding: .7rem .75rem; margin: .12rem 0; border-radius: 6px; color: #c4ced8; text-decoration: none; font-size: .92rem; }
-    .nav-item.active, .nav-item:hover { background: var(--navy-light); color: white; }
-    .nav-icon { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
-    .content { min-width: 0; }
-    .page { max-width: 1380px; padding: 2rem 2.25rem 3rem; margin: 0 auto; }
-    .breadcrumb { display: flex; align-items: center; gap: .45rem; margin-bottom: .6rem; color: var(--muted); font-size: .82rem; }
-    .breadcrumb span { color: #a1abb7; }
-    .page-heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
-    h1 { margin: 0; font-size: 1.55rem; letter-spacing: -.03em; }
-    .subtitle { margin: .3rem 0 0; color: var(--muted); font-size: .9rem; }
-    .btn { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; border: 1px solid transparent; border-radius: 5px; padding: .55rem .8rem; font-size: .86rem; font-weight: 600; }
-    .btn-primary { background: var(--blue); color: white; }
-    .btn-primary:hover { background: var(--blue-hover); }
-    .btn-outline { color: #405366; background: white; border-color: #cdd5df; }
-    .btn-outline:hover { background: #f4f6fa; }
-    .card { overflow: hidden; background: white; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 2px 5px rgb(24 36 51 / 5%); }
-    .card-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 64px; padding: .85rem 1.15rem; border-bottom: 1px solid var(--border); }
-    .result-count { color: var(--muted); font-size: .78rem; }
-    .search { width: 250px; padding: .5rem .7rem; border: 1px solid #cdd5df; border-radius: 5px; outline-color: var(--blue); font-size: .84rem; }
-    table { width: 100%; border-collapse: collapse; }
-    th { padding: .75rem 1.15rem; color: var(--muted); background: #fbfcfd; border-bottom: 1px solid var(--border); font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-align: left; text-transform: uppercase; }
-    td { padding: .9rem 1.15rem; border-bottom: 1px solid #edf0f3; font-size: .88rem; vertical-align: middle; }
-    tr:last-child td { border-bottom: 0; }
-    tbody tr:hover { background: #f8fafc; }
-    .label-key { color: #1e5a9e; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 600; }
-    .options { display: flex; flex-wrap: wrap; gap: .4rem; }
-    .option { padding: .22rem .48rem; color: #405366; background: #edf2f7; border-radius: 4px; font-size: .78rem; }
-    .empty { padding: 4rem 1rem; color: var(--muted); text-align: center; }
-    .empty strong { display: block; margin-bottom: .3rem; color: #405366; font-size: .92rem; }
-    .toast { position: fixed; z-index: 30; right: 1.5rem; bottom: 1.5rem; min-width: 260px; padding: .8rem 1rem; color: white; background: #2fb344; border-radius: 7px; box-shadow: 0 8px 25px rgb(0 0 0 / 20%); font-size: .86rem; font-weight: 600; }
-    .toast.error { background: var(--danger); }
-    .modal-backdrop { position: fixed; z-index: 10; inset: 0; display: grid; place-items: center; padding: 1rem; background: rgb(24 36 51 / 48%); }
-    .modal { width: min(100%, 540px); background: white; border-radius: 7px; box-shadow: 0 15px 40px rgb(0 0 0 / 25%); }
-    .modal-header, .modal-footer { display: flex; align-items: center; padding: 1rem 1.25rem; }
-    .modal-header { justify-content: space-between; border-bottom: 1px solid var(--border); }
-    .modal-header h2 { margin: 0; font-size: 1.05rem; }
-    .modal-body { display: grid; gap: 1rem; padding: 1.25rem; }
-    .modal-footer { justify-content: flex-end; gap: .6rem; border-top: 1px solid var(--border); }
-    .close { border: 0; background: transparent; color: var(--muted); font-size: 1.4rem; line-height: 1; }
-    label { display: grid; gap: .4rem; color: #405366; font-size: .84rem; font-weight: 600; }
-    input, textarea { width: 100%; padding: .58rem .65rem; border: 1px solid #cdd5df; border-radius: 5px; color: var(--text); outline-color: var(--blue); }
-    textarea { min-height: 130px; resize: vertical; }
-    .field-help, #status { margin: 0; color: var(--muted); font-size: .78rem; }
-    #status.error { color: var(--danger); }
-    [hidden] { display: none !important; }
-    @media (max-width: 800px) { .shell { grid-template-columns: 1fr; } .sidebar { display: none; } .page { padding: 1.25rem 1rem; } .page-heading { align-items: flex-start; } .card-header { align-items: flex-start; flex-direction: column; } .search { width: 100%; } td, th { padding-left: .75rem; padding-right: .75rem; } }
-  </style>
-</head>
-<body>
-  <div class="shell">
-    <aside class="sidebar">
-      <div class="brand"><span class="brand-mark">S</span> Slopify Admin</div>
-      <div class="nav-label">Catalog</div>
-      <a class="nav-item" href="/admin/"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 21v-13l9-5 9 5v13h-6v-6h-6v6z"/></svg>Products</a>
-      <a class="nav-item active" href="/admin/product-options"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>Product options</a>
-      <div class="nav-label" style="margin-top: 1rem">System</div>
-      <a class="nav-item" href="/documentation"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 19.5v-15a2 2 0 0 1 2-2h12v19h-12a2 2 0 0 1-2-2z"/><path d="M8 7h6M8 11h6"/></svg>API documentation</a>
-    </aside>
-    <div class="content">
-      <main class="page">
-        <div class="breadcrumb">Catalog <span>›</span> Product options</div>
-        <div class="page-heading">
-          <div><h1>Product options</h1><p class="subtitle">Manage configurable product dimensions and their possible values.</p></div>
-          <button class="btn btn-primary" id="create-option"><span style="font-size:1.1rem;line-height:0">+</span> New product option</button>
-        </div>
-        <section class="card">
-          <header class="card-header"><span class="result-count" id="result-count"></span><input class="search" id="search" placeholder="Search product options…"></header>
-          <table>
-            <thead><tr><th>ID</th><th>Label</th><th>Possible values</th></tr></thead>
-            <tbody id="product-options"><tr><td class="empty" colspan="3"><strong>Loading product options…</strong>Please wait a moment.</td></tr></tbody>
-          </table>
-        </section>
-      </main>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Product Options · Slopify Admin</title>
+    <style>
+      :root {
+        --navy: #182433;
+        --navy-light: #26384d;
+        --blue: #206bc4;
+        --blue-hover: #1a5aa5;
+        --page: #f4f6fa;
+        --border: #dce1e7;
+        --text: #182433;
+        --muted: #667382;
+        --danger: #d63939;
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        color: var(--text);
+        background: var(--page);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+      }
+      button,
+      input,
+      textarea {
+        font: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      .shell {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: 260px 1fr;
+      }
+      .sidebar {
+        background: var(--navy);
+        color: #b8c2cc;
+        display: flex;
+        flex-direction: column;
+        padding: 1.25rem 0.75rem;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        padding: 0.45rem 0.65rem 1.5rem;
+        color: white;
+        font-size: 1.15rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      .brand-mark {
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 7px;
+        background: var(--blue);
+        font-size: 0.9rem;
+      }
+      .nav-label {
+        padding: 0.5rem 0.65rem;
+        color: #8291a2;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+      }
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.7rem 0.75rem;
+        margin: 0.12rem 0;
+        border-radius: 6px;
+        color: #c4ced8;
+        text-decoration: none;
+        font-size: 0.92rem;
+      }
+      .nav-item.active,
+      .nav-item:hover {
+        background: var(--navy-light);
+        color: white;
+      }
+      .nav-icon {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+      }
+      .content {
+        min-width: 0;
+      }
+      .page {
+        max-width: 1380px;
+        padding: 2rem 2.25rem 3rem;
+        margin: 0 auto;
+      }
+      .breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        margin-bottom: 0.6rem;
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+      .breadcrumb span {
+        color: #a1abb7;
+      }
+      .page-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+      h1 {
+        margin: 0;
+        font-size: 1.55rem;
+        letter-spacing: -0.03em;
+      }
+      .subtitle {
+        margin: 0.3rem 0 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        border: 1px solid transparent;
+        border-radius: 5px;
+        padding: 0.55rem 0.8rem;
+        font-size: 0.86rem;
+        font-weight: 600;
+      }
+      .btn-primary {
+        background: var(--blue);
+        color: white;
+      }
+      .btn-primary:hover {
+        background: var(--blue-hover);
+      }
+      .btn-outline {
+        color: #405366;
+        background: white;
+        border-color: #cdd5df;
+      }
+      .btn-outline:hover {
+        background: #f4f6fa;
+      }
+      .card {
+        overflow: hidden;
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgb(24 36 51 / 5%);
+      }
+      .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        min-height: 64px;
+        padding: 0.85rem 1.15rem;
+        border-bottom: 1px solid var(--border);
+      }
+      .result-count {
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+      .search {
+        width: 250px;
+        padding: 0.5rem 0.7rem;
+        border: 1px solid #cdd5df;
+        border-radius: 5px;
+        outline-color: var(--blue);
+        font-size: 0.84rem;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th {
+        padding: 0.75rem 1.15rem;
+        color: var(--muted);
+        background: #fbfcfd;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-align: left;
+        text-transform: uppercase;
+      }
+      td {
+        padding: 0.9rem 1.15rem;
+        border-bottom: 1px solid #edf0f3;
+        font-size: 0.88rem;
+        vertical-align: middle;
+      }
+      tr:last-child td {
+        border-bottom: 0;
+      }
+      tbody tr:hover {
+        background: #f8fafc;
+      }
+      .label-key {
+        color: #1e5a9e;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-weight: 600;
+      }
+      .options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+      }
+      .option {
+        padding: 0.22rem 0.48rem;
+        color: #405366;
+        background: #edf2f7;
+        border-radius: 4px;
+        font-size: 0.78rem;
+      }
+      .empty {
+        padding: 4rem 1rem;
+        color: var(--muted);
+        text-align: center;
+      }
+      .empty strong {
+        display: block;
+        margin-bottom: 0.3rem;
+        color: #405366;
+        font-size: 0.92rem;
+      }
+      .toast {
+        position: fixed;
+        z-index: 30;
+        right: 1.5rem;
+        bottom: 1.5rem;
+        min-width: 260px;
+        padding: 0.8rem 1rem;
+        color: white;
+        background: #2fb344;
+        border-radius: 7px;
+        box-shadow: 0 8px 25px rgb(0 0 0 / 20%);
+        font-size: 0.86rem;
+        font-weight: 600;
+      }
+      .toast.error {
+        background: var(--danger);
+      }
+      .modal-backdrop {
+        position: fixed;
+        z-index: 10;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: 1rem;
+        background: rgb(24 36 51 / 48%);
+      }
+      .modal {
+        width: min(100%, 540px);
+        background: white;
+        border-radius: 7px;
+        box-shadow: 0 15px 40px rgb(0 0 0 / 25%);
+      }
+      .modal-header,
+      .modal-footer {
+        display: flex;
+        align-items: center;
+        padding: 1rem 1.25rem;
+      }
+      .modal-header {
+        justify-content: space-between;
+        border-bottom: 1px solid var(--border);
+      }
+      .modal-header h2 {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+      .modal-body {
+        display: grid;
+        gap: 1rem;
+        padding: 1.25rem;
+      }
+      .modal-footer {
+        justify-content: flex-end;
+        gap: 0.6rem;
+        border-top: 1px solid var(--border);
+      }
+      .close {
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        font-size: 1.4rem;
+        line-height: 1;
+      }
+      label {
+        display: grid;
+        gap: 0.4rem;
+        color: #405366;
+        font-size: 0.84rem;
+        font-weight: 600;
+      }
+      input,
+      textarea {
+        width: 100%;
+        padding: 0.58rem 0.65rem;
+        border: 1px solid #cdd5df;
+        border-radius: 5px;
+        color: var(--text);
+        outline-color: var(--blue);
+      }
+      textarea {
+        min-height: 130px;
+        resize: vertical;
+      }
+      .field-help,
+      #status {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+      #status.error {
+        color: var(--danger);
+      }
+      [hidden] {
+        display: none !important;
+      }
+      @media (max-width: 800px) {
+        .shell {
+          grid-template-columns: 1fr;
+        }
+        .sidebar {
+          display: none;
+        }
+        .page {
+          padding: 1.25rem 1rem;
+        }
+        .page-heading {
+          align-items: flex-start;
+        }
+        .card-header {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+        .search {
+          width: 100%;
+        }
+        td,
+        th {
+          padding-left: 0.75rem;
+          padding-right: 0.75rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="brand"><span class="brand-mark">S</span> Slopify Admin</div>
+        <div class="nav-label">Catalog</div>
+        <a class="nav-item" href="/admin/"
+          ><svg class="nav-icon" viewBox="0 0 24 24">
+            <path d="M3 21v-13l9-5 9 5v13h-6v-6h-6v6z" /></svg
+          >Products</a
+        >
+        <a class="nav-item active" href="/admin/product-options"
+          ><svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" /></svg
+          >Product options</a
+        >
+        <div class="nav-label" style="margin-top: 1rem">System</div>
+        <a class="nav-item" href="/documentation"
+          ><svg class="nav-icon" viewBox="0 0 24 24">
+            <path d="M4 19.5v-15a2 2 0 0 1 2-2h12v19h-12a2 2 0 0 1-2-2z" />
+            <path d="M8 7h6M8 11h6" /></svg
+          >API documentation</a
+        >
+      </aside>
+      <div class="content">
+        <main class="page">
+          <div class="breadcrumb">Catalog <span>›</span> Product options</div>
+          <div class="page-heading">
+            <div>
+              <h1>Product options</h1>
+              <p class="subtitle">
+                Manage configurable product dimensions and their possible values.
+              </p>
+            </div>
+            <button class="btn btn-primary" id="create-option">
+              <span style="font-size: 1.1rem; line-height: 0">+</span> New product option
+            </button>
+          </div>
+          <section class="card">
+            <header class="card-header">
+              <span class="result-count" id="result-count"></span
+              ><input class="search" id="search" placeholder="Search product options…" />
+            </header>
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Label</th>
+                  <th>Possible values</th>
+                </tr>
+              </thead>
+              <tbody id="product-options">
+                <tr>
+                  <td class="empty" colspan="3">
+                    <strong>Loading product options…</strong>Please wait a moment.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+        </main>
+      </div>
     </div>
-  </div>
-  <div class="toast" id="toast" role="status" hidden></div>
-  <div class="modal-backdrop" id="modal-backdrop" hidden>
-    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <header class="modal-header"><h2 id="modal-title">Create product option</h2><button class="close" id="close-modal" aria-label="Close">×</button></header>
-      <form id="option-form">
-        <div class="modal-body">
-          <label>Label <input id="label" name="label" required autocomplete="off" placeholder="Color"><span class="field-help">Enter the untranslated English label. The frontend will translate it.</span></label>
-          <label>Possible values <textarea id="possibleValues" name="possibleValues" required placeholder="Red&#10;Blue&#10;Green"></textarea><span class="field-help">Enter one value per line.</span></label>
-          <p id="status" role="alert"></p>
-        </div>
-        <footer class="modal-footer"><button class="btn btn-outline" id="cancel" type="button">Cancel</button><button class="btn btn-primary" type="submit">Create product option</button></footer>
-      </form>
-    </section>
-  </div>
-  <script>
-    const form = document.querySelector('#option-form')
-    const optionsBody = document.querySelector('#product-options')
-    const modal = document.querySelector('#modal-backdrop')
-    const status = document.querySelector('#status')
-    const search = document.querySelector('#search')
-    const resultCount = document.querySelector('#result-count')
-    const toast = document.querySelector('#toast')
-    let productOptions = []
-    let toastTimer
+    <div class="toast" id="toast" role="status" hidden></div>
+    <div class="modal-backdrop" id="modal-backdrop" hidden>
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <header class="modal-header">
+          <h2 id="modal-title">Create product option</h2>
+          <button class="close" id="close-modal" aria-label="Close">×</button>
+        </header>
+        <form id="option-form">
+          <div class="modal-body">
+            <label
+              >Label
+              <input id="label" name="label" required autocomplete="off" placeholder="Color" /><span
+                class="field-help"
+                >Enter the untranslated English label. The frontend will translate it.</span
+              ></label
+            >
+            <label
+              >Possible values
+              <textarea
+                id="possibleValues"
+                name="possibleValues"
+                required
+                placeholder="Red&#10;Blue&#10;Green"
+              ></textarea
+              ><span class="field-help">Enter one value per line.</span></label
+            >
+            <p id="status" role="alert"></p>
+          </div>
+          <footer class="modal-footer">
+            <button class="btn btn-outline" id="cancel" type="button">Cancel</button
+            ><button class="btn btn-primary" type="submit">Create product option</button>
+          </footer>
+        </form>
+      </section>
+    </div>
+    <script>
+      const form = document.querySelector("#option-form")
+      const optionsBody = document.querySelector("#product-options")
+      const modal = document.querySelector("#modal-backdrop")
+      const status = document.querySelector("#status")
+      const search = document.querySelector("#search")
+      const resultCount = document.querySelector("#result-count")
+      const toast = document.querySelector("#toast")
+      let productOptions = []
+      let toastTimer
 
-    const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character])
-    const showToast = (message, isError = false) => { clearTimeout(toastTimer); toast.textContent = message; toast.classList.toggle('error', isError); toast.hidden = false; toastTimer = setTimeout(() => { toast.hidden = true }, 2800) }
-    const showError = (message) => { status.textContent = message; status.classList.add('error') }
-    const closeModal = () => { modal.hidden = true; form.reset(); status.textContent = ''; status.classList.remove('error') }
-    const openModal = () => { form.reset(); status.textContent = ''; status.classList.remove('error'); modal.hidden = false; form.label.focus() }
+      const escapeHtml = (value) =>
+        String(value ?? "").replace(
+          /[&<>'"]/g,
+          (character) =>
+            ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character],
+        )
+      const showToast = (message, isError = false) => {
+        clearTimeout(toastTimer)
+        toast.textContent = message
+        toast.classList.toggle("error", isError)
+        toast.hidden = false
+        toastTimer = setTimeout(() => {
+          toast.hidden = true
+        }, 2800)
+      }
+      const showError = (message) => {
+        status.textContent = message
+        status.classList.add("error")
+      }
+      const closeModal = () => {
+        modal.hidden = true
+        form.reset()
+        status.textContent = ""
+        status.classList.remove("error")
+      }
+      const openModal = () => {
+        form.reset()
+        status.textContent = ""
+        status.classList.remove("error")
+        modal.hidden = false
+        form.label.focus()
+      }
 
-    const renderProductOptions = () => {
-      const query = search.value.trim().toLowerCase()
-      const visibleOptions = productOptions.filter((option) => option.label.toLowerCase().includes(query) || option.possibleValues.some((value) => value.toLowerCase().includes(query)))
-      resultCount.textContent = `${visibleOptions.length} ${visibleOptions.length === 1 ? 'result' : 'results'}`
-      if (!visibleOptions.length) { optionsBody.innerHTML = `<tr><td class="empty" colspan="3"><strong>${query ? 'No matching product options' : 'No product options yet'}</strong>${query ? 'Try a different search term.' : 'Create your first product option to get started.'}</td></tr>`; return }
-      optionsBody.innerHTML = visibleOptions.map((option) => `<tr><td style="color:var(--muted)">#${option.id}</td><td class="label-key">${escapeHtml(option.label)}</td><td><div class="options">${option.possibleValues.map((value) => `<span class="option">${escapeHtml(value)}</span>`).join('')}</div></td></tr>`).join('')
-    }
+      const renderProductOptions = () => {
+        const query = search.value.trim().toLowerCase()
+        const visibleOptions = productOptions.filter(
+          (option) =>
+            option.label.toLowerCase().includes(query) ||
+            option.possibleValues.some((value) => value.toLowerCase().includes(query)),
+        )
+        resultCount.textContent = `${visibleOptions.length} ${visibleOptions.length === 1 ? "result" : "results"}`
+        if (!visibleOptions.length) {
+          optionsBody.innerHTML = `<tr><td class="empty" colspan="3"><strong>${query ? "No matching product options" : "No product options yet"}</strong>${query ? "Try a different search term." : "Create your first product option to get started."}</td></tr>`
+          return
+        }
+        optionsBody.innerHTML = visibleOptions
+          .map(
+            (option) =>
+              `<tr><td style="color:var(--muted)">#${option.id}</td><td class="label-key">${escapeHtml(option.label)}</td><td><div class="options">${option.possibleValues.map((value) => `<span class="option">${escapeHtml(value)}</span>`).join("")}</div></td></tr>`,
+          )
+          .join("")
+      }
 
-    const loadProductOptions = async () => {
-      try { const response = await fetch('/product-options'); if (!response.ok) throw new Error(); productOptions = await response.json(); renderProductOptions() }
-      catch { optionsBody.innerHTML = '<tr><td class="empty" colspan="3"><strong>Could not load product options</strong>Check the API connection and try again.</td></tr>'; showToast('Could not load product options.', true) }
-    }
+      const loadProductOptions = async () => {
+        try {
+          const response = await fetch("/product-options")
+          if (!response.ok) throw new Error()
+          productOptions = await response.json()
+          renderProductOptions()
+        } catch {
+          optionsBody.innerHTML =
+            '<tr><td class="empty" colspan="3"><strong>Could not load product options</strong>Check the API connection and try again.</td></tr>'
+          showToast("Could not load product options.", true)
+        }
+      }
 
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault()
-      status.textContent = ''; status.classList.remove('error')
-      const possibleValues = [...new Set(form.possibleValues.value.split('\n').map((value) => value.trim()).filter(Boolean))]
-      if (!possibleValues.length) return showError('Add at least one possible value.')
-      const response = await fetch('/product-options', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ label: form.label.value.trim(), possibleValues }) })
-      if (!response.ok) { const error = await response.json().catch(() => ({})); showError(error.message || 'Could not create product option.'); return }
-      closeModal(); await loadProductOptions(); showToast('Product option created successfully.')
-    })
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault()
+        status.textContent = ""
+        status.classList.remove("error")
+        const possibleValues = [
+          ...new Set(
+            form.possibleValues.value
+              .split("\n")
+              .map((value) => value.trim())
+              .filter(Boolean),
+          ),
+        ]
+        if (!possibleValues.length) return showError("Add at least one possible value.")
+        const response = await fetch("/product-options", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ label: form.label.value.trim(), possibleValues }),
+        })
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({}))
+          showError(error.message || "Could not create product option.")
+          return
+        }
+        closeModal()
+        await loadProductOptions()
+        showToast("Product option created successfully.")
+      })
 
-    document.querySelector('#create-option').addEventListener('click', openModal)
-    document.querySelector('#close-modal').addEventListener('click', closeModal)
-    document.querySelector('#cancel').addEventListener('click', closeModal)
-    search.addEventListener('input', renderProductOptions)
-    document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !modal.hidden) closeModal() })
-    loadProductOptions()
-  </script>
-</body>
+      document.querySelector("#create-option").addEventListener("click", openModal)
+      document.querySelector("#close-modal").addEventListener("click", closeModal)
+      document.querySelector("#cancel").addEventListener("click", closeModal)
+      search.addEventListener("input", renderProductOptions)
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !modal.hidden) closeModal()
+      })
+      loadProductOptions()
+    </script>
+  </body>
 </html>

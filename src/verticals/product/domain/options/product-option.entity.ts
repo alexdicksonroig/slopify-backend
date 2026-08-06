@@ -1,7 +1,7 @@
 export class ProductOption {
-  constructor (
+  constructor(
     readonly id: number,
     readonly possibleValues: string[],
-    readonly label: string
+    readonly label: string,
   ) {}
 }

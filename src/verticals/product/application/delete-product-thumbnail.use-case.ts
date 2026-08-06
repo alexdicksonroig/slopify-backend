@@ -1,9 +1,9 @@
-import { type Product } from '../domain/product.entity'
-import { productRepository } from '../infrastructure/persistence/product.repository'
-import { r2Adapter } from '../infrastructure/r2.adapter'
+import { type Product } from "../domain/product.entity"
+import { productRepository } from "../infrastructure/persistence/product.repository"
+import { r2Adapter } from "../infrastructure/r2.adapter"
 
 export class DeleteProductThumbnailUseCase {
-  async execute (product: Product): Promise<void> {
+  async execute(product: Product): Promise<void> {
     if (!product.thumbnail) return
 
     const reference = product.thumbnail
