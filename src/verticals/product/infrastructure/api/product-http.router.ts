@@ -23,7 +23,19 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
     limits: { fileSize: 500_000, files: 1, parts: 1 },
   })
 
-  fastify.get("/products", productHandler.list)
+  fastify.get<{ Querystring: Record<string, string> }>(
+    "/products",
+    {
+      schema: {
+        querystring: {
+          type: "object",
+          maxProperties: 1,
+          additionalProperties: { type: "string", minLength: 1 },
+        },
+      },
+    },
+    productHandler.list,
+  )
 
   fastify.get<{ Params: { id: string } }>(
     "/products/:id",

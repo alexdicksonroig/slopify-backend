@@ -1,12 +1,36 @@
-import { eq } from "drizzle-orm"
+import { and, eq, exists } from "drizzle-orm"
 import { getDrizzleDB } from "@database"
 import { Product } from "../../domain/product.entity"
 import { type CreateProduct, type UpdateProduct } from "../../domain/product.repository"
-import { products } from "./schema"
+import { productOptions, products, productVariants, selectedOptions } from "./schema"
 
 export class ProductRepository {
-  async findAll(): Promise<Product[]> {
-    const records = await getDrizzleDB().select().from(products)
+  async findAll(filter?: { option: string; value: string }): Promise<Product[]> {
+    const database = getDrizzleDB()
+    const records = filter
+      ? await database
+          .select()
+          .from(products)
+          .where(
+            exists(
+              database
+                .select({ id: productVariants.id })
+                .from(productVariants)
+                .innerJoin(
+                  selectedOptions,
+                  eq(selectedOptions.productVariantId, productVariants.id),
+                )
+                .innerJoin(productOptions, eq(productOptions.id, selectedOptions.productOptionId))
+                .where(
+                  and(
+                    eq(productVariants.productId, products.id),
+                    eq(productOptions.label, filter.option),
+                    eq(selectedOptions.value, filter.value),
+                  ),
+                ),
+            ),
+          )
+      : await database.select().from(products)
     return records.map(
       (record) =>
         new Product(

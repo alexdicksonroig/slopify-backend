@@ -7,8 +7,11 @@ import { updateProductUseCase } from "../../application/update-product.use-case"
 import { r2Adapter } from "../r2.adapter"
 
 class ProductHandler {
-  list = async () => {
-    const products = await listProductsUseCase.execute()
+  list = async (request: FastifyRequest<{ Querystring: Record<string, string> }>) => {
+    const [option] = Object.entries(request.query)
+    const products = await listProductsUseCase.execute(
+      option ? { option: option[0], value: option[1] } : undefined,
+    )
     return products.map((product) => ({
       id: product.id,
       name: product.name,
