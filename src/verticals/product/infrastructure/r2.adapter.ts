@@ -8,7 +8,7 @@ const requiredEnvironmentVariable = (name: string): string => {
 
 const endpoint = requiredEnvironmentVariable("R2_ENDPOINT")
 const bucket = requiredEnvironmentVariable("R2_BUCKET")
-const publicBaseUrl = requiredEnvironmentVariable("R2_PUBLIC_BASE_URL").replace(/\/$/, "")
+const publicBaseUrl = requiredEnvironmentVariable("R2_PUBLIC_BASE_URL")
 
 const client = new S3Client({
   endpoint,
@@ -35,5 +35,5 @@ export const r2Adapter = {
     await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }))
   },
 
-  publicUrl: (key: string): string => `${publicBaseUrl}/${key}`,
+  publicUrl: (key: string): string => `${publicBaseUrl}/${bucket}/${key}`,
 }
