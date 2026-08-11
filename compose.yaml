@@ -3,13 +3,15 @@ services:
     container_name: slopify-cloudflared
     image: cloudflare/cloudflared:latest
     restart: unless-stopped
+    profiles:
+      - tunnel
     network_mode: host
     command:
       - tunnel
       - --no-autoupdate
       - run
       - --token
-      - "${TUNNEL_TOKEN:?TUNNEL_TOKEN must be set}"
+      - "${TUNNEL_TOKEN:-}"
     depends_on:
       backend:
         condition: service_healthy
