@@ -4,13 +4,11 @@ import { orderHandler } from "./order-http.handler"
 const router: FastifyPluginAsync = async (fastify): Promise<void> => {
   fastify.post<{
     Body: {
-      invoicePriceInCents: number
-      shippingPriceInCents: number
-      totalPriceInCents: number
+      couponCode?: string
+      address: string
       items: Array<{
-        productId: number
+        variantId: number
         quantity: number
-        unitPriceInCents: number
       }>
     }
   }>(
@@ -19,23 +17,20 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
       schema: {
         body: {
           type: "object",
-          required: ["invoicePriceInCents", "shippingPriceInCents", "totalPriceInCents", "items"],
+          required: ["address", "items"],
           additionalProperties: false,
           properties: {
-            invoicePriceInCents: { type: "integer", minimum: 0 },
-            shippingPriceInCents: { type: "integer", minimum: 0 },
-            totalPriceInCents: { type: "integer", minimum: 0 },
+            couponCode: { type: "string" },
+            address: { type: "string" },
             items: {
               type: "array",
-              minItems: 1,
               items: {
                 type: "object",
-                required: ["productId", "quantity", "unitPriceInCents"],
+                required: ["variantId", "quantity"],
                 additionalProperties: false,
                 properties: {
-                  productId: { type: "integer", minimum: 1 },
+                  variantId: { type: "integer" },
                   quantity: { type: "integer", minimum: 1 },
-                  unitPriceInCents: { type: "integer", minimum: 0 },
                 },
               },
             },

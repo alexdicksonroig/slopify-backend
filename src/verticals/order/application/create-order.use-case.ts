@@ -3,19 +3,11 @@ import { orderRepository } from "../infrastructure/persistence/order.repository"
 
 export class CreateOrderUseCase {
   async execute(input: {
-    invoicePriceInCents: number
-    shippingPriceInCents: number
-    totalPriceInCents: number
+    couponCode?: string
+    address: string
     items: OrderItem[]
   }): Promise<Order> {
-    const order = new Order(
-      null,
-      input.invoicePriceInCents,
-      input.shippingPriceInCents,
-      input.totalPriceInCents,
-      input.items,
-      null,
-    )
+    const order = new Order(null, input.couponCode ?? null, input.address, input.items, null)
 
     return await orderRepository.create(order)
   }

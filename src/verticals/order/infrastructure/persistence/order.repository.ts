@@ -8,26 +8,23 @@ export class OrderRepository {
       const [record] = await transaction
         .insert(orders)
         .values({
-          invoicePriceInCents: order.invoicePriceInCents,
-          shippingPriceInCents: order.shippingPriceInCents,
-          totalPriceInCents: order.totalPriceInCents,
+          couponCode: order.couponCode,
+          address: order.address,
         })
         .returning({ id: orders.id, createdAt: orders.createdAt })
 
       await transaction.insert(orderItems).values(
         order.items.map((item) => ({
           orderId: record.id,
-          productId: item.productId,
+          variantId: item.variantId,
           quantity: item.quantity,
-          unitPriceInCents: item.unitPriceInCents,
         })),
       )
 
       return new Order(
         record.id,
-        order.invoicePriceInCents,
-        order.shippingPriceInCents,
-        order.totalPriceInCents,
+        order.couponCode,
+        order.address,
         [...order.items],
         record.createdAt,
       )
