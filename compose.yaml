@@ -1,4 +1,44 @@
 services:
+  cloudflared:
+    container_name: slopify-cloudflared
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - tunnel
+      - --no-autoupdate
+      - run
+      - --token
+      - "${TUNNEL_TOKEN:?TUNNEL_TOKEN must be set}"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  backend:
+    container_name: slopify-backend
+    build:
+      context: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
+    ports:
+      - "${PORT}:${PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "const s=require('node:net').connect(Number(process.env.PORT),'127.0.0.1',()=>{s.end();process.exit(0)});s.on('error',()=>process.exit(1))"
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
   postgres:
     container_name: slopify-postgres
     image: postgres:17.4-alpine
