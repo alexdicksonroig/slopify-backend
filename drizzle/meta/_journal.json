@@ -43,6 +43,13 @@
       "when": 1786095919024,
       "tag": "0005_ambiguous_vulture",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1786095919025,
+      "tag": "0006_product_option_delete_cascade",
+      "breakpoints": true
     }
   ]
 }

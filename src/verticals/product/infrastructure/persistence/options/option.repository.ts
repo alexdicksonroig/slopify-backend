@@ -1,4 +1,5 @@
 import { getDrizzleDB } from "@database"
+import { eq } from "drizzle-orm"
 import { ProductOption } from "../../../domain/options/product-option.entity"
 import { productOptions } from "../schema"
 
@@ -20,6 +21,14 @@ class OptionRepository {
     const [record] = await getDrizzleDB().insert(productOptions).values(option).returning()
 
     return new ProductOption(record.id, record.possibleValues, record.label)
+  }
+
+  async delete(id: number): Promise<boolean> {
+    const [record] = await getDrizzleDB()
+      .delete(productOptions)
+      .where(eq(productOptions.id, id))
+      .returning({ id: productOptions.id })
+    return Boolean(record)
   }
 }
 

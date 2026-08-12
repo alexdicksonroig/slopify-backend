@@ -7,6 +7,13 @@ const nonBlankString = {
   pattern: ".*\\S.*",
 }
 
+const optionIdParams = {
+  type: "object",
+  required: ["optionId"],
+  additionalProperties: false,
+  properties: { optionId: { type: "string", pattern: "^[1-9][0-9]*$" } },
+}
+
 const router: FastifyPluginAsync = async (fastify): Promise<void> => {
   fastify.get("/product-options", optionHandler.list)
 
@@ -34,6 +41,12 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
       },
     },
     optionHandler.create,
+  )
+
+  fastify.delete<{ Params: { optionId: string } }>(
+    "/product-options/:optionId",
+    { schema: { params: optionIdParams } },
+    optionHandler.delete,
   )
 }
 

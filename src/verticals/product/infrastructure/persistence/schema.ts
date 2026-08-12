@@ -30,7 +30,7 @@ export const selectedOptions = pgTable(
       .references(() => productVariants.id, { onDelete: "cascade" }),
     productOptionId: integer("product_option_id")
       .notNull()
-      .references(() => productOptions.id, { onDelete: "restrict" }),
+      .references(() => productOptions.id, { onDelete: "cascade" }),
     value: text("value").notNull(),
   },
   (table) => [primaryKey({ columns: [table.productVariantId, table.productOptionId] })],
