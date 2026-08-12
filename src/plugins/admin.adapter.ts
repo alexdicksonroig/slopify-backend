@@ -16,6 +16,10 @@ const adminAdapter: FastifyPluginAsync = async (fastify): Promise<void> => {
   fastify.get("/admin/product-options", async (_request, reply) => {
     return await reply.sendFile("product-options.html")
   })
+
+  fastify.get<{ Params: { id: string } }>("/admin/products/:id", async (_request, reply) => {
+    return await reply.sendFile("product.html")
+  })
 }
 
 export default fp(adminAdapter, { name: "admin" })
