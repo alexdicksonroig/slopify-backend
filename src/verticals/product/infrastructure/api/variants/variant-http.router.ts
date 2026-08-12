@@ -63,6 +63,12 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
     variantHandler.create,
   )
 
+  fastify.delete<{ Params: { variantId: string } }>(
+    "/product-variants/:variantId",
+    { schema: { params: variantIdParams } },
+    variantHandler.delete,
+  )
+
   fastify.post<{
     Params: { variantId: string }
     Body: { optionId: number; value: string }

@@ -59,6 +59,14 @@ class VariantRepository {
     return new ProductVariant(record.id, productId, sku, [])
   }
 
+  async delete(id: number): Promise<boolean> {
+    const [record] = await getDrizzleDB()
+      .delete(productVariants)
+      .where(eq(productVariants.id, id))
+      .returning({ id: productVariants.id })
+    return Boolean(record)
+  }
+
   async addSelection(variantId: number, optionId: number, value: string): Promise<void> {
     await getDrizzleDB().insert(selectedOptions).values({
       productVariantId: variantId,

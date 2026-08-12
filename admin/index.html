@@ -682,7 +682,7 @@
         }
       }
       const productVariantHtml = (variant = { sku: "", selections: [] }) =>
-        `<div class="variant-card"${variant.id ? ` data-variant-id="${variant.id}"` : ""}><div class="variant-card-header"><label>SKU <input data-variant-sku required value="${escapeHtml(variant.sku)}" autocomplete="off"${variant.id ? " readonly" : ""}></label>${variant.id ? "" : '<button class="btn btn-danger" data-action="remove-variant" type="button">Remove</button>'}</div>${productOptions
+        `<div class="variant-card"${variant.id ? ` data-variant-id="${variant.id}"` : ""}><div class="variant-card-header"><label>SKU <input data-variant-sku required value="${escapeHtml(variant.sku)}" autocomplete="off"${variant.id ? " readonly" : ""}></label><button class="btn btn-danger" data-action="remove-variant" type="button">Remove</button></div>${productOptions
           .map((option) => {
             const selection = variant.selections.find((item) => item.option.id === option.id)
             return `<label class="variant-row"><span>${escapeHtml(option.label)}</span><select data-option-id="${option.id}"><option value="">Not used</option>${option.possibleValues.map((value) => `<option value="${escapeHtml(value)}"${selection?.value === value ? " selected" : ""}>${escapeHtml(value)}</option>`).join("")}</select></label>`
@@ -813,6 +813,14 @@
           const initialVariants = new Map(
             loadedProductVariants.map((variant) => [variant.id, variant]),
           )
+          const retainedVariantIds = new Set(variants.map((variant) => variant.id).filter(Boolean))
+          for (const variant of loadedProductVariants) {
+            if (retainedVariantIds.has(variant.id)) continue
+            const deleteResponse = await fetch(`/product-variants/${variant.id}`, {
+              method: "DELETE",
+            })
+            if (!deleteResponse.ok) throw new Error()
+          }
           for (const variant of variants) {
             let variantId = variant.id
             if (!variantId) {
@@ -895,7 +903,9 @@
       productVariants.addEventListener("click", (event) => {
         const button = event.target.closest("button[data-action]")
         if (!button) return
-        if (button.dataset.action === "remove-variant") button.closest(".variant-card").remove()
+        if (button.dataset.action === "remove-variant") {
+          button.closest(".variant-card").remove()
+        }
         if (button.dataset.action === "add-variant") {
           const firstVariant = productVariants.querySelector(".variant-card")
           const selections = firstVariant
