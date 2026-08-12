@@ -1,36 +1,45 @@
-import { and, eq, exists } from "drizzle-orm"
+import { and, asc, desc, eq, exists } from "drizzle-orm"
 import { getDrizzleDB } from "@database"
 import { Product } from "../../domain/product.entity"
-import { type CreateProduct, type UpdateProduct } from "../../domain/product.repository"
+import {
+  type CreateProduct,
+  type ProductSort,
+  type UpdateProduct,
+} from "../../domain/product.repository"
 import { productOptions, products, productVariants, selectedOptions } from "./schema"
 
 export class ProductRepository {
-  async findAll(filter?: { option: string; value: string }): Promise<Product[]> {
+  async findAll(
+    filter?: { option: string; value: string },
+    sort?: ProductSort,
+  ): Promise<Product[]> {
     const database = getDrizzleDB()
-    const records = filter
-      ? await database
-          .select()
-          .from(products)
-          .where(
-            exists(
-              database
-                .select({ id: productVariants.id })
-                .from(productVariants)
-                .innerJoin(
-                  selectedOptions,
-                  eq(selectedOptions.productVariantId, productVariants.id),
-                )
-                .innerJoin(productOptions, eq(productOptions.id, selectedOptions.productOptionId))
-                .where(
-                  and(
-                    eq(productVariants.productId, products.id),
-                    eq(productOptions.label, filter.option),
-                    eq(selectedOptions.value, filter.value),
-                  ),
-                ),
+    let query = database.select().from(products).$dynamic()
+
+    if (filter) {
+      query = query.where(
+        exists(
+          database
+            .select({ id: productVariants.id })
+            .from(productVariants)
+            .innerJoin(selectedOptions, eq(selectedOptions.productVariantId, productVariants.id))
+            .innerJoin(productOptions, eq(productOptions.id, selectedOptions.productOptionId))
+            .where(
+              and(
+                eq(productVariants.productId, products.id),
+                eq(productOptions.label, filter.option),
+                eq(selectedOptions.value, filter.value),
+              ),
             ),
-          )
-      : await database.select().from(products)
+        ),
+      )
+    }
+
+    if (sort === "newest") query = query.orderBy(desc(products.createdAt), desc(products.id))
+    if (sort === "price-asc") query = query.orderBy(asc(products.priceInCents), asc(products.id))
+    if (sort === "price-desc") query = query.orderBy(desc(products.priceInCents), asc(products.id))
+
+    const records = await query
     return records.map(
       (record) =>
         new Product(

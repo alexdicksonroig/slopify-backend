@@ -5,3 +5,5 @@ export type CreateProduct = {
 }
 
 export type UpdateProduct = Partial<CreateProduct>
+
+export type ProductSort = "newest" | "price-asc" | "price-desc"
