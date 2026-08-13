@@ -14,9 +14,8 @@ class ProductHandler {
     }>,
   ) => {
     const { sort, ...filters } = request.query
-    const [option] = Object.entries(filters)
     const products = await listProductsUseCase.execute(
-      option ? { option: option[0], value: option[1] } : undefined,
+      Object.entries(filters).map(([option, value]) => ({ option, value: value! })),
       sort,
     )
     return products.map((product) => ({

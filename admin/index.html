@@ -858,7 +858,7 @@
         `<div class="variant-card"${variant.id ? ` data-variant-id="${variant.id}"` : ""}><div class="variant-card-header"><label>SKU <input data-variant-sku required value="${escapeHtml(variant.sku)}" autocomplete="off"${variant.id ? " readonly" : ""}></label><button class="btn btn-danger" data-action="remove-variant" type="button">Remove</button></div>${productOptions
           .map((option) => {
             const selection = variant.selections.find((item) => item.option.id === option.id)
-            return `<label class="variant-row"><span>${escapeHtml(option.label)}</span><select data-option-id="${option.id}"><option value="">Not used</option>${option.possibleValues.map((value) => `<option value="${escapeHtml(value)}"${selection?.value === value ? " selected" : ""}>${escapeHtml(value)}</option>`).join("")}</select></label>`
+            return `<label class="variant-row"><span>${escapeHtml(option.label)}</span><select data-option-id="${option.id}"><option value="">Not used</option>${option.possibleValues.map((value) => `<option value="${value.id}"${selection?.value.id === value.id ? " selected" : ""}>${escapeHtml(value.label)}</option>`).join("")}</select></label>`
           })
           .join("")}</div>`
       const renderProductVariants = (variants) => {
@@ -964,7 +964,7 @@
             .filter((select) => select.value)
             .map((select) => ({
               optionId: Number(select.dataset.optionId),
-              value: select.value,
+              valueId: Number(select.value),
             })),
         }))
         let variantChangeFailed = false
@@ -995,27 +995,27 @@
             const previousSelections = new Map(
               (initialVariants.get(variantId)?.selections || []).map((selection) => [
                 selection.option.id,
-                selection.value,
+                selection.value.id,
               ]),
             )
             const nextSelections = new Map(
-              variant.selections.map((selection) => [selection.optionId, selection.value]),
+              variant.selections.map((selection) => [selection.optionId, selection.valueId]),
             )
 
-            for (const [optionId, value] of previousSelections) {
-              if (nextSelections.get(optionId) === value) continue
+            for (const [optionId, valueId] of previousSelections) {
+              if (nextSelections.get(optionId) === valueId) continue
               const deleteResponse = await fetch(
                 `/product-variants/${variantId}/selections/${optionId}`,
                 { method: "DELETE" },
               )
               if (!deleteResponse.ok) throw new Error()
             }
-            for (const [optionId, value] of nextSelections) {
-              if (previousSelections.get(optionId) === value) continue
+            for (const [optionId, valueId] of nextSelections) {
+              if (previousSelections.get(optionId) === valueId) continue
               const addResponse = await fetch(`/product-variants/${variantId}/selections`, {
                 method: "POST",
                 headers: { "content-type": "application/json" },
-                body: JSON.stringify({ optionId, value }),
+                body: JSON.stringify({ optionId, valueId }),
               })
               if (!addResponse.ok) throw new Error()
             }
@@ -1072,7 +1072,7 @@
                 .filter((select) => select.value)
                 .map((select) => ({
                   option: { id: Number(select.dataset.optionId) },
-                  value: select.value,
+                  value: { id: Number(select.value) },
                 }))
             : []
           button.insertAdjacentHTML("beforebegin", productVariantHtml({ sku: "", selections }))

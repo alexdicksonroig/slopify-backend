@@ -32,11 +32,10 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
       schema: {
         querystring: {
           type: "object",
-          additionalProperties: { type: "string", minLength: 1 },
           properties: {
             sort: { type: "string", enum: ["newest", "price-asc", "price-desc"] },
           },
-          anyOf: [{ maxProperties: 1 }, { required: ["sort"], maxProperties: 2 }],
+          additionalProperties: { type: "string", minLength: 1 },
         },
       },
     },

@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, exists } from "drizzle-orm"
+import { and, asc, countDistinct, desc, eq, inArray, or, type SQL } from "drizzle-orm"
 import { getDrizzleDB } from "@database"
 import { Product } from "../../domain/product.entity"
 import {
@@ -6,33 +6,40 @@ import {
   type ProductSort,
   type UpdateProduct,
 } from "../../domain/product.repository"
-import { productOptions, products, productVariants, selectedOptions } from "./schema"
+import { productOptionValues, productOptions, products, selectedOptions } from "./schema"
 
 export class ProductRepository {
   async findAll(
-    filter?: { option: string; value: string },
+    filters?: { option: string; value: string }[],
     sort?: ProductSort,
   ): Promise<Product[]> {
     const database = getDrizzleDB()
     let query = database.select().from(products).$dynamic()
 
-    if (filter) {
-      query = query.where(
-        exists(
-          database
-            .select({ id: productVariants.id })
-            .from(productVariants)
-            .innerJoin(selectedOptions, eq(selectedOptions.productVariantId, productVariants.id))
-            .innerJoin(productOptions, eq(productOptions.id, selectedOptions.productOptionId))
-            .where(
-              and(
-                eq(productVariants.productId, products.id),
-                eq(productOptions.label, filter.option),
-                eq(selectedOptions.value, filter.value),
-              ),
-            ),
-        ),
-      )
+    if (filters?.length) {
+      const conditions: SQL[] = []
+      for (const filter of filters) {
+        conditions.push(
+          and(
+            eq(productOptions.label, filter.option),
+            eq(productOptionValues.label, filter.value),
+          )!,
+        )
+      }
+
+      const productIds = database
+        .select({ productId: selectedOptions.productId })
+        .from(selectedOptions)
+        .innerJoin(productOptions, eq(productOptions.id, selectedOptions.productOptionId))
+        .innerJoin(
+          productOptionValues,
+          eq(productOptionValues.id, selectedOptions.productOptionValueId),
+        )
+        .where(or(...conditions))
+        .groupBy(selectedOptions.productId)
+        .having(eq(countDistinct(productOptions.id), filters.length))
+
+      query = query.where(inArray(products.id, productIds))
     }
 
     if (sort === "newest") query = query.orderBy(desc(products.createdAt), desc(products.id))

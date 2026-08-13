@@ -38,14 +38,14 @@ class VariantHandler {
   addSelection = async (
     request: FastifyRequest<{
       Params: { variantId: string }
-      Body: { optionId: number; value: string }
+      Body: { optionId: number; valueId: number }
     }>,
     reply: FastifyReply,
   ): Promise<void> => {
     await addProductVariantSelectionUseCase.execute(
       Number(request.params.variantId),
       request.body.optionId,
-      request.body.value,
+      request.body.valueId,
     )
     await reply.code(204).send()
   }

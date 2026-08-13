@@ -669,7 +669,7 @@
         const visibleOptions = productOptions.filter(
           (option) =>
             option.label.toLowerCase().includes(query) ||
-            option.possibleValues.some((value) => value.toLowerCase().includes(query)),
+            option.possibleValues.some((value) => value.label.toLowerCase().includes(query)),
         )
         resultCount.textContent = `${visibleOptions.length} ${visibleOptions.length === 1 ? "result" : "results"}`
         if (!visibleOptions.length) {
@@ -679,7 +679,7 @@
         optionsBody.innerHTML = visibleOptions
           .map(
             (option) =>
-              `<tr><td style="color:var(--muted)">#${option.id}</td><td class="label-key">${escapeHtml(option.label)}</td><td><div class="options">${option.possibleValues.map((value) => `<span class="option">${escapeHtml(value)}</span>`).join("")}</div></td><td><div class="actions"><button class="btn btn-danger btn-icon" data-action="delete" data-id="${option.id}" aria-label="Delete ${escapeHtml(option.label)}">×</button></div></td></tr>`,
+              `<tr><td style="color:var(--muted)">#${option.id}</td><td class="label-key">${escapeHtml(option.label)}</td><td><div class="options">${option.possibleValues.map((value) => `<span class="option">${escapeHtml(value.label)}</span>`).join("")}</div></td><td><div class="actions"><button class="btn btn-danger btn-icon" data-action="delete" data-id="${option.id}" aria-label="Delete ${escapeHtml(option.label)}">×</button></div></td></tr>`,
           )
           .join("")
       }

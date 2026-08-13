@@ -4,10 +4,10 @@ import { productRepository } from "../infrastructure/persistence/product.reposit
 
 export class ListProductsUseCase {
   async execute(
-    filter?: { option: string; value: string },
+    filters?: { option: string; value: string }[],
     sort?: ProductSort,
   ): Promise<Product[]> {
-    return await productRepository.findAll(filter, sort)
+    return await productRepository.findAll(filters, sort)
   }
 }
 

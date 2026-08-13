@@ -1,53 +1,66 @@
 import { getDrizzleDB } from "@database"
-import { and, eq } from "drizzle-orm"
+import { and, eq, inArray } from "drizzle-orm"
 import { ProductOption } from "../../../domain/options/product-option.entity"
+import { ProductOptionValue } from "../../../domain/options/product-option-value.entity"
 import {
   ProductVariant,
   type ProductOptionSelection,
 } from "../../../domain/variants/product-variant.entity"
-import { productOptions, productVariants, selectedOptions } from "../schema"
+import { productOptionValues, productOptions, productVariants, selectedOptions } from "../schema"
 
 class VariantRepository {
+  // TODO: Refactor/cleanup
   async findForProduct(productId: number): Promise<ProductVariant[]> {
-    const records = await getDrizzleDB()
-      .select({
-        productVariantId: productVariants.id,
-        productId: productVariants.productId,
-        sku: productVariants.sku,
-        optionId: productOptions.id,
-        possibleValues: productOptions.possibleValues,
-        label: productOptions.label,
-        value: selectedOptions.value,
-      })
+    const database = getDrizzleDB()
+    const variants = await database
+      .select()
       .from(productVariants)
-      .leftJoin(selectedOptions, eq(selectedOptions.productVariantId, productVariants.id))
-      .leftJoin(productOptions, eq(productOptions.id, selectedOptions.productOptionId))
       .where(eq(productVariants.productId, productId))
-      .orderBy(productVariants.id, productOptions.id)
+      .orderBy(productVariants.id)
 
-    const variants = new Map<number, ProductVariant>()
+    if (variants.length === 0) return []
+
+    const records = await database
+      .select({
+        variantId: selectedOptions.productVariantId,
+        optionId: productOptions.id,
+        optionLabel: productOptions.label,
+        valueId: productOptionValues.id,
+        valueLabel: productOptionValues.label,
+      })
+      .from(selectedOptions)
+      .innerJoin(productOptions, eq(productOptions.id, selectedOptions.productOptionId))
+      .innerJoin(
+        productOptionValues,
+        eq(productOptionValues.id, selectedOptions.productOptionValueId),
+      )
+      .where(
+        inArray(
+          selectedOptions.productVariantId,
+          variants.map((variant) => variant.id),
+        ),
+      )
+      .orderBy(selectedOptions.productVariantId, productOptions.id)
+
+    const selectionsByVariant = new Map<number, ProductOptionSelection[]>()
     for (const record of records) {
-      let variant = variants.get(record.productVariantId)
-      if (!variant) {
-        variant = new ProductVariant(record.productVariantId, record.productId, record.sku, [])
-        variants.set(record.productVariantId, variant)
-      }
-
-      if (
-        record.optionId !== null &&
-        record.possibleValues !== null &&
-        record.label !== null &&
-        record.value !== null
-      ) {
-        const selection: ProductOptionSelection = {
-          option: new ProductOption(record.optionId, record.possibleValues, record.label),
-          value: record.value,
-        }
-        variant.selections.push(selection)
-      }
+      const selections = selectionsByVariant.get(record.variantId) ?? []
+      selections.push({
+        option: new ProductOption(record.optionId, [], record.optionLabel),
+        value: new ProductOptionValue(record.valueId, record.valueLabel),
+      })
+      selectionsByVariant.set(record.variantId, selections)
     }
 
-    return [...variants.values()]
+    return variants.map(
+      (variant) =>
+        new ProductVariant(
+          variant.id,
+          variant.productId,
+          variant.sku,
+          selectionsByVariant.get(variant.id) ?? [],
+        ),
+    )
   }
 
   async createVariant(productId: number, sku: string): Promise<ProductVariant> {
@@ -67,11 +80,20 @@ class VariantRepository {
     return Boolean(record)
   }
 
-  async addSelection(variantId: number, optionId: number, value: string): Promise<void> {
-    await getDrizzleDB().insert(selectedOptions).values({
+  async addSelection(variantId: number, optionId: number, valueId: number): Promise<void> {
+    const database = getDrizzleDB()
+    const [variant] = await database
+      .select({ productId: productVariants.productId })
+      .from(productVariants)
+      .where(eq(productVariants.id, variantId))
+      .limit(1)
+    if (!variant) throw new Error("Product variant not found")
+
+    await database.insert(selectedOptions).values({
+      productId: variant.productId,
       productVariantId: variantId,
       productOptionId: optionId,
-      value,
+      productOptionValueId: valueId,
     })
   }
 

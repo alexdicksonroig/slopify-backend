@@ -71,7 +71,7 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
 
   fastify.post<{
     Params: { variantId: string }
-    Body: { optionId: number; value: string }
+    Body: { optionId: number; valueId: number }
   }>(
     "/product-variants/:variantId/selections",
     {
@@ -79,11 +79,11 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
         params: variantIdParams,
         body: {
           type: "object",
-          required: ["optionId", "value"],
+          required: ["optionId", "valueId"],
           additionalProperties: false,
           properties: {
             optionId: { type: "integer", minimum: 1 },
-            value: nonBlankString,
+            valueId: { type: "integer", minimum: 1 },
           },
         },
       },
