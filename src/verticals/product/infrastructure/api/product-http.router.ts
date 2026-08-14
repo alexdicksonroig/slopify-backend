@@ -25,17 +25,20 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
   })
 
   fastify.get<{
-    Querystring: Record<string, string | undefined> & { sort?: ProductSort }
+    Querystring: Record<string, string> & { sort?: ProductSort }
   }>(
     "/products",
     {
       schema: {
         querystring: {
           type: "object",
+          propertyNames: {
+            anyOf: [{ const: "sort" }, { type: "string", pattern: "^[1-9][0-9]*$" }],
+          },
           properties: {
             sort: { type: "string", enum: ["newest", "price-asc", "price-desc"] },
           },
-          additionalProperties: { type: "string", minLength: 1 },
+          additionalProperties: { type: "string", pattern: "^[1-9][0-9]*$" },
         },
       },
     },

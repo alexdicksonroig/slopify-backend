@@ -6,11 +6,11 @@ import {
   type ProductSort,
   type UpdateProduct,
 } from "../../domain/product.repository"
-import { productOptionValues, productOptions, products, selectedOptions } from "./schema"
+import { products, selectedOptions } from "./schema"
 
 export class ProductRepository {
   async findAll(
-    filters?: { option: string; value: string }[],
+    filters?: { optionId: number; valueId: number }[],
     sort?: ProductSort,
   ): Promise<Product[]> {
     const database = getDrizzleDB()
@@ -21,8 +21,8 @@ export class ProductRepository {
       for (const filter of filters) {
         conditions.push(
           and(
-            eq(productOptions.label, filter.option),
-            eq(productOptionValues.label, filter.value),
+            eq(selectedOptions.productOptionId, filter.optionId),
+            eq(selectedOptions.productOptionValueId, filter.valueId),
           )!,
         )
       }
@@ -30,14 +30,9 @@ export class ProductRepository {
       const productIds = database
         .select({ productId: selectedOptions.productId })
         .from(selectedOptions)
-        .innerJoin(productOptions, eq(productOptions.id, selectedOptions.productOptionId))
-        .innerJoin(
-          productOptionValues,
-          eq(productOptionValues.id, selectedOptions.productOptionValueId),
-        )
         .where(or(...conditions))
         .groupBy(selectedOptions.productId)
-        .having(eq(countDistinct(productOptions.id), filters.length))
+        .having(eq(countDistinct(selectedOptions.productOptionId), filters.length))
 
       query = query.where(inArray(products.id, productIds))
     }

@@ -10,12 +10,15 @@ import { r2Adapter } from "../r2.adapter"
 class ProductHandler {
   list = async (
     request: FastifyRequest<{
-      Querystring: Record<string, string | undefined> & { sort?: ProductSort }
+      Querystring: Record<string, string> & { sort?: ProductSort }
     }>,
   ) => {
     const { sort, ...filters } = request.query
     const products = await listProductsUseCase.execute(
-      Object.entries(filters).map(([option, value]) => ({ option, value: value! })),
+      Object.entries(filters).map(([optionId, valueId]) => ({
+        optionId: Number(optionId),
+        valueId: Number(valueId),
+      })),
       sort,
     )
     return products.map((product) => ({
