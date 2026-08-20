@@ -2,8 +2,8 @@ import { integer, pgTable, primaryKey, serial, text, timestamp } from "drizzle-o
 
 export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),
-  couponCode: text("coupon_code"),
-  address: text("address").notNull(),
+  checkoutSessionId: text("checkout_session_id").unique(),
+  status: text("status").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 })
 
@@ -15,6 +15,9 @@ export const orderItems = pgTable(
       .references(() => orders.id, { onDelete: "cascade" }),
     variantId: integer("variant_id").notNull(),
     quantity: integer("quantity").notNull(),
+    productName: text("product_name").notNull(),
+    unitAmount: integer("unit_amount").notNull(),
+    currency: text("currency").notNull(),
   },
   (table) => [primaryKey({ columns: [table.orderId, table.variantId] })],
 )

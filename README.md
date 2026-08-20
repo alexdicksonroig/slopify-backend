@@ -23,6 +23,16 @@ Run the test cases.
 
 Provide your bucket credentials in the gitignored `.env` file. The application validates all R2 settings at startup. `R2_PUBLIC_BASE_URL` is the public bucket or custom-domain URL used in Product API responses.
 
+## Stripe checkout webhooks
+
+Set `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` in `.env`. For local webhook forwarding:
+
+```sh
+stripe listen --forward-to localhost:3000/stripe/webhook
+```
+
+Use the webhook signing secret printed by the Stripe CLI as `STRIPE_WEBHOOK_SECRET`.
+
 ## Database and migrations
 
 Start the local PostgreSQL database with Docker Compose:

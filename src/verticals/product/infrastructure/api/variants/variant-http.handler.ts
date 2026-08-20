@@ -15,13 +15,15 @@ class VariantHandler {
   create = async (
     request: FastifyRequest<{
       Params: { productId: string }
-      Body: { sku: string }
+      Body: { sku: string; unitAmount: number; currency: string }
     }>,
     reply: FastifyReply,
   ): Promise<ProductVariant> => {
     const variant = await createProductVariantUseCase.execute(
       Number(request.params.productId),
       request.body.sku,
+      request.body.unitAmount,
+      request.body.currency.toLowerCase(),
     )
     return await reply.code(201).send(variant)
   }

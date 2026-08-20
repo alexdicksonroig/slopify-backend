@@ -16,7 +16,6 @@ const productIdParams = {
 const productBodyProperties = {
   name: { type: "string", minLength: 1 },
   description: { type: ["string", "null"] },
-  priceInCents: { type: "integer", minimum: 0 },
 }
 
 const router: FastifyPluginAsync = async (fastify): Promise<void> => {
@@ -58,7 +57,6 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
     Body: {
       name: string
       description?: string | null
-      priceInCents: number
     }
   }>(
     "/products",
@@ -66,7 +64,7 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
       schema: {
         body: {
           type: "object",
-          required: ["name", "priceInCents"],
+          required: ["name"],
           additionalProperties: false,
           properties: productBodyProperties,
         },
@@ -80,7 +78,6 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
     Body: Partial<{
       name: string
       description?: string | null
-      priceInCents: number
     }>
   }>(
     "/products/:id",

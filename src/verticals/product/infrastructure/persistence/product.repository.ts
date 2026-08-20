@@ -1,5 +1,5 @@
-import { and, asc, countDistinct, desc, eq, inArray, or, type SQL } from "drizzle-orm"
 import { getDrizzleDB } from "@database"
+import { and, countDistinct, desc, eq, inArray, or, type SQL } from "drizzle-orm"
 import { Product } from "../../domain/product.entity"
 import {
   type CreateProduct,
@@ -38,19 +38,11 @@ export class ProductRepository {
     }
 
     if (sort === "newest") query = query.orderBy(desc(products.createdAt), desc(products.id))
-    if (sort === "price-asc") query = query.orderBy(asc(products.priceInCents), asc(products.id))
-    if (sort === "price-desc") query = query.orderBy(desc(products.priceInCents), asc(products.id))
 
     const records = await query
     return records.map(
       (record) =>
-        new Product(
-          record.id,
-          record.name,
-          record.description,
-          record.priceInCents,
-          record.thumbnailReference,
-        ),
+        new Product(record.id, record.name, record.description, record.thumbnailReference),
     )
   }
 
@@ -62,18 +54,12 @@ export class ProductRepository {
       .limit(1)
     if (!record) return null
 
-    return new Product(
-      record.id,
-      record.name,
-      record.description,
-      record.priceInCents,
-      record.thumbnailReference,
-    )
+    return new Product(record.id, record.name, record.description, record.thumbnailReference)
   }
 
   async create(product: CreateProduct): Promise<Product> {
     const [record] = await getDrizzleDB().insert(products).values(product).returning()
-    return new Product(record.id, record.name, record.description, record.priceInCents, null)
+    return new Product(record.id, record.name, record.description, null)
   }
 
   async update(id: number, product: UpdateProduct): Promise<Product | null> {
@@ -84,13 +70,7 @@ export class ProductRepository {
       .returning()
     if (!record) return null
 
-    return new Product(
-      record.id,
-      record.name,
-      record.description,
-      record.priceInCents,
-      record.thumbnailReference,
-    )
+    return new Product(record.id, record.name, record.description, record.thumbnailReference)
   }
 
   async setThumbnail(product: Product): Promise<void> {

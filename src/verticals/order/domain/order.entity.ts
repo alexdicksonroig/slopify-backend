@@ -1,6 +1,11 @@
+export type OrderStatus = "pending" | "paid" | "payment_failed" | "expired"
+
 export type OrderItem = {
   variantId: number
   quantity: number
+  productName: string
+  unitAmount: number
+  currency: string
 }
 
 export class Order {
@@ -8,9 +13,9 @@ export class Order {
 
   constructor(
     readonly id: number | null,
-    readonly couponCode: string | null,
-    readonly address: string,
     items: OrderItem[],
+    readonly checkoutSessionId: string | null,
+    readonly status: OrderStatus,
     readonly createdAt: Date | null,
   ) {
     this.items = items.map((item) => ({ ...item }))

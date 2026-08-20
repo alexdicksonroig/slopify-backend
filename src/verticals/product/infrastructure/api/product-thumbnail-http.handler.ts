@@ -41,7 +41,6 @@ class ProductThumbnailHandler {
       id: product.id,
       name: product.name,
       description: product.description,
-      priceInCents: product.priceInCents,
       thumbnailUrl: r2Adapter.publicUrl(product.thumbnail!),
     }
   }

@@ -4,7 +4,6 @@ export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
-  priceInCents: integer("price_in_cents").notNull(),
   thumbnailReference: text("thumbnail_reference"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
@@ -27,6 +26,8 @@ export const productVariants = pgTable("product_variants", {
   id: serial("id").primaryKey(),
   productId: integer("product_id").notNull(),
   sku: text("sku").notNull().unique(),
+  unitAmount: integer("unit_amount").notNull(),
+  currency: text("currency").notNull(),
 })
 
 export const selectedOptions = pgTable(

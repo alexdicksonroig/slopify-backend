@@ -11,6 +11,8 @@ export class ProductVariant {
     readonly id: number,
     readonly productId: number,
     readonly sku: string,
+    readonly unitAmount: number,
+    readonly currency: string,
     readonly selections: ProductOptionSelection[],
   ) {}
 }

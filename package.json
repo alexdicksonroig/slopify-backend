@@ -36,7 +36,8 @@
     "fastify-plugin": "5.0.0",
     "file-type": "22.0.1",
     "postgres": "3.4.9",
-    "sharp": "0.35.3"
+    "sharp": "0.35.3",
+    "stripe": "22.5.0"
   },
   "devDependencies": {
     "@types/node": "25.0.3",

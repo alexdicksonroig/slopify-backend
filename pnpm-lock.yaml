@@ -53,6 +53,9 @@ importers:
       sharp:
         specifier: 0.35.3
         version: 0.35.3(@types/node@25.0.3)
+      stripe:
+        specifier: 22.5.0
+        version: 22.5.0(@types/node@25.0.3)
     devDependencies:
       '@types/node':
         specifier: 25.0.3
@@ -1556,6 +1559,15 @@ packages:
     resolution: {integrity: sha512-1tB5mhVo7U+ETBKNf92xT4hrQa3pm0MZ0PQvuDnWgAAGHDsfp4lPSpiS6psrSiet87wyGPh9ft6wmhOMQ0hDiw==}
     engines: {node: '>=14.16'}
 
+  stripe@22.5.0:
+    resolution: {integrity: sha512-QVwMwriC0bbySx6R4dpsvJ0W//GojC1kwWVS6rPSoVqDUIZX4Hy3TaUrd2AZeXEAaKbfWIjQjvo3vKAReHZ0vQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@types/node': '>=18'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+
   strtok3@10.3.5:
     resolution: {integrity: sha512-ki4hZQfh5rX0QDLLkOCj+h+CVNkqmp/CMf8v8kZpkNVK6jGQooMytqzLZYUVYIZcFZ6yDB70EfD8POcFXiF5oA==}
     engines: {node: '>=18'}
@@ -2886,6 +2898,10 @@ snapshots:
   statuses@2.0.2: {}
 
   strip-json-comments@5.0.3: {}
+
+  stripe@22.5.0(@types/node@25.0.3):
+    optionalDependencies:
+      '@types/node': 25.0.3
 
   strtok3@10.3.5:
     dependencies:

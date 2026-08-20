@@ -46,7 +46,7 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
 
   fastify.post<{
     Params: { productId: string }
-    Body: { sku: string }
+    Body: { sku: string; unitAmount: number; currency: string }
   }>(
     "/products/:productId/variants",
     {
@@ -54,9 +54,13 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
         params: productIdParams,
         body: {
           type: "object",
-          required: ["sku"],
+          required: ["sku", "unitAmount", "currency"],
           additionalProperties: false,
-          properties: { sku: nonBlankString },
+          properties: {
+            sku: nonBlankString,
+            unitAmount: { type: "integer", minimum: 1 },
+            currency: { type: "string", pattern: "^[A-Za-z]{3}$" },
+          },
         },
       },
     },

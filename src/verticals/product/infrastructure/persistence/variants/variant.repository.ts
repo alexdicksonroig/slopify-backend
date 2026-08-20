@@ -58,18 +58,25 @@ class VariantRepository {
           variant.id,
           variant.productId,
           variant.sku,
+          variant.unitAmount,
+          variant.currency,
           selectionsByVariant.get(variant.id) ?? [],
         ),
     )
   }
 
-  async createVariant(productId: number, sku: string): Promise<ProductVariant> {
+  async createVariant(
+    productId: number,
+    sku: string,
+    unitAmount: number,
+    currency: string,
+  ): Promise<ProductVariant> {
     const [record] = await getDrizzleDB()
       .insert(productVariants)
-      .values({ productId, sku })
+      .values({ productId, sku, unitAmount, currency })
       .returning({ id: productVariants.id })
 
-    return new ProductVariant(record.id, productId, sku, [])
+    return new ProductVariant(record.id, productId, sku, unitAmount, currency, [])
   }
 
   async delete(id: number): Promise<boolean> {

@@ -1,35 +1,27 @@
 import { type FastifyPluginAsync } from "fastify"
-import { orderHandler } from "./order-http.handler"
+import { paymentHandler } from "./payment-http.handler"
 
 const router: FastifyPluginAsync = async (fastify): Promise<void> => {
   fastify.post<{
-    Body: {
-      couponCode?: string
-      address: string
-      items: Array<{
-        variantId: number
-        quantity: number
-      }>
-    }
+    Body: { items: Array<{ variantId: number; quantity: number }> }
   }>(
-    "/orders",
+    "/create-checkout-session",
     {
       schema: {
         body: {
           type: "object",
-          required: ["address", "items"],
+          required: ["items"],
           additionalProperties: false,
           properties: {
-            couponCode: { type: "string" },
-            address: { type: "string" },
             items: {
               type: "array",
+              minItems: 1,
               items: {
                 type: "object",
                 required: ["variantId", "quantity"],
                 additionalProperties: false,
                 properties: {
-                  variantId: { type: "integer" },
+                  variantId: { type: "integer", minimum: 1 },
                   quantity: { type: "integer", minimum: 1 },
                 },
               },
@@ -38,7 +30,22 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
         },
       },
     },
-    orderHandler.create,
+    paymentHandler.createCheckoutSession,
+  )
+
+  fastify.get<{ Querystring: { session_id: string } }>(
+    "/session-status",
+    {
+      schema: {
+        querystring: {
+          type: "object",
+          required: ["session_id"],
+          additionalProperties: false,
+          properties: { session_id: { type: "string", minLength: 1 } },
+        },
+      },
+    },
+    paymentHandler.getCheckoutSession,
   )
 }
 

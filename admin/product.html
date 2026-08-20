@@ -456,13 +456,6 @@
               </header>
               <div class="card-body">
                 <label>Name <input id="name" required minlength="1" autocomplete="off" /></label>
-                <label
-                  >Price in euro cents
-                  <input id="priceInCents" required type="number" min="0" step="1" /><span
-                    class="field-help"
-                    >Example: €25.00 is 2500 cents.</span
-                  ></label
-                >
                 <label>Description <textarea id="description"></textarea></label>
               </div>
             </section>
@@ -547,8 +540,10 @@
         thumbnailPreviewImage.src = url
         thumbnailPreview.hidden = false
       }
-      const variantHtml = (variant = { sku: "", selections: [] }) =>
-        `<div class="variant-card"${variant.id ? ` data-variant-id="${variant.id}"` : ""}><div class="variant-card-header"><label>SKU <input data-variant-sku required value="${escapeHtml(variant.sku)}" autocomplete="off"${variant.id ? " readonly" : ""}></label><button class="btn btn-danger" data-action="remove-variant" type="button">Remove</button></div>${productOptions
+      const variantHtml = (
+        variant = { sku: "", unitAmount: "", currency: "usd", selections: [] },
+      ) =>
+        `<div class="variant-card"${variant.id ? ` data-variant-id="${variant.id}"` : ""}><div class="variant-card-header"><label>SKU <input data-variant-sku required value="${escapeHtml(variant.sku)}" autocomplete="off"${variant.id ? " readonly" : ""}></label><label>Amount (minor units) <input data-variant-unit-amount type="number" min="1" step="1" required value="${escapeHtml(variant.unitAmount)}"${variant.id ? " readonly" : ""}></label><label>Currency <input data-variant-currency required minlength="3" maxlength="3" value="${escapeHtml(variant.currency)}"${variant.id ? " readonly" : ""}></label><button class="btn btn-danger" data-action="remove-variant" type="button">Remove</button></div>${productOptions
           .map((option) => {
             const selection = variant.selections.find((item) => item.option.id === option.id)
             return `<label class="variant-row"><span>${escapeHtml(option.label)}</span><select data-option-id="${option.id}"><option value="">Not used</option>${option.possibleValues.map((value) => `<option value="${value.id}"${selection?.value.id === value.id ? " selected" : ""}>${escapeHtml(value.label)}</option>`).join("")}</select></label>`
@@ -590,7 +585,6 @@
           loadedVariants = await variantsResponse.json()
           form.name.value = product.name
           form.description.value = product.description || ""
-          form.priceInCents.value = product.priceInCents
           currentThumbnailUrl = product.thumbnailUrl
           if (currentThumbnailUrl) showThumbnail(currentThumbnailUrl)
           document.querySelector("#page-title").textContent = `Edit ${product.name}`
@@ -613,6 +607,8 @@
           (variant) => ({
             id: variant.dataset.variantId ? Number(variant.dataset.variantId) : null,
             sku: variant.querySelector("[data-variant-sku]").value,
+            unitAmount: Number(variant.querySelector("[data-variant-unit-amount]").value),
+            currency: variant.querySelector("[data-variant-currency]").value,
             selections: [...variant.querySelectorAll("select[data-option-id]")]
               .filter((select) => select.value)
               .map((select) => ({
@@ -634,7 +630,11 @@
             const response = await fetch(`/products/${activeProductId}/variants`, {
               method: "POST",
               headers: { "content-type": "application/json" },
-              body: JSON.stringify({ sku: variant.sku }),
+              body: JSON.stringify({
+                sku: variant.sku,
+                unitAmount: variant.unitAmount,
+                currency: variant.currency,
+              }),
             })
             if (!response.ok) throw new Error()
             variantId = (await response.json()).id
@@ -679,7 +679,6 @@
             body: JSON.stringify({
               name: form.name.value,
               description: form.description.value || null,
-              priceInCents: Number(form.priceInCents.value),
             }),
           })
           if (!response.ok) {
@@ -734,7 +733,10 @@
                   value: { id: Number(select.value) },
                 }))
             : []
-          button.insertAdjacentHTML("beforebegin", variantHtml({ sku: "", selections }))
+          button.insertAdjacentHTML(
+            "beforebegin",
+            variantHtml({ sku: "", unitAmount: "", currency: "usd", selections }),
+          )
         }
       })
       thumbnailInput.addEventListener("change", () => {

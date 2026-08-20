@@ -5,7 +5,6 @@ export class Product {
     readonly id: number,
     readonly name: string,
     readonly description: string | null,
-    readonly priceInCents: number,
     thumbnailReference: string | null,
   ) {
     this.thumbnail = thumbnailReference

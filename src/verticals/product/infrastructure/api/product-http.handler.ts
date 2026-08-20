@@ -25,7 +25,6 @@ class ProductHandler {
       id: product.id,
       name: product.name,
       description: product.description,
-      priceInCents: product.priceInCents,
       thumbnailUrl: product.thumbnail ? r2Adapter.publicUrl(product.thumbnail) : null,
     }))
   }
@@ -38,7 +37,6 @@ class ProductHandler {
       id: product.id,
       name: product.name,
       description: product.description,
-      priceInCents: product.priceInCents,
       thumbnailUrl: product.thumbnail ? r2Adapter.publicUrl(product.thumbnail) : null,
     }
   }
@@ -48,7 +46,6 @@ class ProductHandler {
       Body: {
         name: string
         description?: string | null
-        priceInCents: number
       }
     }>,
     reply: FastifyReply,
@@ -61,7 +58,6 @@ class ProductHandler {
       id: product.id,
       name: product.name,
       description: product.description,
-      priceInCents: product.priceInCents,
       thumbnailUrl: null,
     })
   }
@@ -72,7 +68,6 @@ class ProductHandler {
       Body: Partial<{
         name: string
         description?: string | null
-        priceInCents: number
       }>
     }>,
     reply: FastifyReply,
@@ -84,7 +79,6 @@ class ProductHandler {
       id: product.id,
       name: product.name,
       description: product.description,
-      priceInCents: product.priceInCents,
       thumbnailUrl: product.thumbnail ? r2Adapter.publicUrl(product.thumbnail) : null,
     }
   }
