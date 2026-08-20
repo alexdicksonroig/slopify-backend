@@ -10,7 +10,6 @@ export class ProductVariant {
   constructor(
     readonly id: number,
     readonly productId: number,
-    readonly sku: string,
     readonly unitAmount: number | null,
     readonly currency: string | null,
     readonly selections: ProductOptionSelection[],

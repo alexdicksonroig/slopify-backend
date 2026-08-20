@@ -4,11 +4,10 @@ import { variantRepository } from "../../infrastructure/persistence/variants/var
 export class CreateProductVariantUseCase {
   async execute(
     productId: number,
-    sku: string,
     unitAmount: number,
     currency: string,
   ): Promise<ProductVariant> {
-    return await variantRepository.createVariant(productId, sku, unitAmount, currency)
+    return await variantRepository.createVariant(productId, unitAmount, currency)
   }
 }
 

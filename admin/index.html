@@ -410,7 +410,7 @@
       }
       .variant-card-header {
         display: grid;
-        grid-template-columns: 1fr auto;
+        grid-template-columns: 1fr 1fr auto;
         align-items: end;
         gap: 0.65rem;
       }
@@ -839,9 +839,9 @@
         }
       }
       const productVariantHtml = (
-        variant = { sku: "", unitAmount: "", currency: "usd", selections: [] },
+        variant = { unitAmount: "", currency: "", selections: [] },
       ) =>
-        `<div class="variant-card"${variant.id ? ` data-variant-id="${variant.id}"` : ""}><div class="variant-card-header"><label>SKU <input data-variant-sku required value="${escapeHtml(variant.sku)}" autocomplete="off"${variant.id ? " readonly" : ""}></label><label>Amount (minor units) <input data-variant-unit-amount type="number" min="1" step="1" required value="${escapeHtml(variant.unitAmount)}"${variant.id ? " readonly" : ""}></label><label>Currency <input data-variant-currency required minlength="3" maxlength="3" value="${escapeHtml(variant.currency)}"${variant.id ? " readonly" : ""}></label><button class="btn btn-danger" data-action="remove-variant" type="button">Remove</button></div>${productOptions
+        `<div class="variant-card"${variant.id ? ` data-variant-id="${variant.id}"` : ""}><div class="variant-card-header"><label>Amount (minor units) <input data-variant-unit-amount type="number" min="1" step="1" required value="${escapeHtml(variant.unitAmount)}"${variant.id ? " readonly" : ""}></label><label>Currency <input data-variant-currency required minlength="3" maxlength="3" value="${escapeHtml(variant.currency)}"${variant.id ? " readonly" : ""}></label><button class="btn btn-danger" data-action="remove-variant" type="button">Remove</button></div>${productOptions
           .map((option) => {
             const selection = variant.selections.find((item) => item.option.id === option.id)
             return `<label class="variant-row"><span>${escapeHtml(option.label)}</span><select data-option-id="${option.id}"><option value="">Not used</option>${option.possibleValues.map((value) => `<option value="${value.id}"${selection?.value.id === value.id ? " selected" : ""}>${escapeHtml(value.label)}</option>`).join("")}</select></label>`
@@ -944,7 +944,6 @@
         const savedProduct = await response.json()
         const variants = [...productVariants.querySelectorAll(".variant-card")].map((variant) => ({
           id: variant.dataset.variantId ? Number(variant.dataset.variantId) : null,
-          sku: variant.querySelector("[data-variant-sku]").value,
           unitAmount: Number(variant.querySelector("[data-variant-unit-amount]").value),
           currency: variant.querySelector("[data-variant-currency]").value,
           selections: [...variant.querySelectorAll("select[data-option-id]")]
@@ -974,7 +973,6 @@
                 method: "POST",
                 headers: { "content-type": "application/json" },
                 body: JSON.stringify({
-                  sku: variant.sku,
                   unitAmount: variant.unitAmount,
                   currency: variant.currency,
                 }),
@@ -1068,7 +1066,7 @@
             : []
           button.insertAdjacentHTML(
             "beforebegin",
-            productVariantHtml({ sku: "", unitAmount: "", currency: "usd", selections }),
+            productVariantHtml({ unitAmount: "", currency: "", selections }),
           )
         }
       })

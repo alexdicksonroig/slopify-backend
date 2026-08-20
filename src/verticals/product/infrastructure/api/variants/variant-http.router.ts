@@ -1,12 +1,6 @@
 import { type FastifyPluginAsync } from "fastify"
 import { variantHandler } from "./variant-http.handler"
 
-const nonBlankString = {
-  type: "string",
-  minLength: 1,
-  pattern: ".*\\S.*",
-}
-
 const positiveId = { type: "string", pattern: "^[1-9][0-9]*$" }
 
 const productIdParams = {
@@ -46,7 +40,7 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
 
   fastify.post<{
     Params: { productId: string }
-    Body: { sku: string; unitAmount: number; currency: string }
+    Body: { unitAmount: number; currency: string }
   }>(
     "/products/:productId/variants",
     {
@@ -54,10 +48,9 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
         params: productIdParams,
         body: {
           type: "object",
-          required: ["sku", "unitAmount", "currency"],
+          required: ["unitAmount", "currency"],
           additionalProperties: false,
           properties: {
-            sku: nonBlankString,
             unitAmount: { type: "integer", minimum: 1 },
             currency: { type: "string", pattern: "^[A-Za-z]{3}$" },
           },
