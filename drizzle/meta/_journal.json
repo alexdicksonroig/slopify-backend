@@ -8,6 +8,13 @@
       "when": 1786639858298,
       "tag": "0000_safe_stepford_cuckoos",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1787244109008,
+      "tag": "0001_robust_namora",
+      "breakpoints": true
     }
   ]
 }
