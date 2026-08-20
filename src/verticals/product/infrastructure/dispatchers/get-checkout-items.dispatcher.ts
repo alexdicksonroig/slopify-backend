@@ -28,6 +28,9 @@ export const getCheckoutItemsDispatcher = {
     return items.map((item) => {
       const variant = variantsById.get(item.variantId)
       if (!variant) throw new Error(`Product variant ${item.variantId} not found`)
+      if (variant.unitAmount === null || variant.currency === null) {
+        throw new Error(`Product variant ${item.variantId} has no price configured`)
+      }
 
       return {
         ...item,

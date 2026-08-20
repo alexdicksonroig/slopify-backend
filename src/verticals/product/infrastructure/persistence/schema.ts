@@ -26,8 +26,8 @@ export const productVariants = pgTable("product_variants", {
   id: serial("id").primaryKey(),
   productId: integer("product_id").notNull(),
   sku: text("sku").notNull().unique(),
-  unitAmount: integer("unit_amount").notNull(),
-  currency: text("currency").notNull(),
+  unitAmount: integer("unit_amount"),
+  currency: text("currency"),
 })
 
 export const selectedOptions = pgTable(
