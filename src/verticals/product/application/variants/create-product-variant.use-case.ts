@@ -2,11 +2,7 @@ import { type ProductVariant } from "../../domain/variants/product-variant.entit
 import { variantRepository } from "../../infrastructure/persistence/variants/variant.repository"
 
 export class CreateProductVariantUseCase {
-  async execute(
-    productId: number,
-    unitAmount: number,
-    currency: string,
-  ): Promise<ProductVariant> {
+  async execute(productId: number, unitAmount: number, currency: string): Promise<ProductVariant> {
     return await variantRepository.createVariant(productId, unitAmount, currency)
   }
 }
