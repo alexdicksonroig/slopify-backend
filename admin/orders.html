@@ -5,39 +5,426 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Orders · Shop Admin</title>
     <style>
-      :root { --navy:#182433;--navy-light:#26384d;--blue:#206bc4;--page:#f4f6fa;--border:#dce1e7;--text:#182433;--muted:#667382;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--text);background:var(--page) }
-      *{box-sizing:border-box} body{margin:0;min-height:100vh}.shell{min-height:100vh;display:grid;grid-template-columns:260px 1fr}.sidebar{background:var(--navy);color:#b8c2cc;padding:1.25rem .75rem}.brand{display:flex;align-items:center;gap:.7rem;padding:.45rem .65rem 1.5rem;color:#fff;font-size:1.15rem;font-weight:700}.brand-mark{display:grid;place-items:center;width:30px;height:30px;border-radius:7px;background:var(--blue);font-size:.9rem}.nav-label{padding:.5rem .65rem;color:#8291a2;font-size:.7rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase}.nav-item{display:flex;align-items:center;gap:.75rem;padding:.7rem .75rem;margin:.12rem 0;border-radius:6px;color:#c4ced8;text-decoration:none;font-size:.92rem}.nav-item.active,.nav-item:hover{background:var(--navy-light);color:#fff}.nav-icon{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}.content{min-width:0}.page{max-width:1380px;padding:2rem 2.25rem 3rem;margin:auto}.breadcrumb{margin-bottom:.6rem;color:var(--muted);font-size:.82rem}.page-heading{margin-bottom:1.5rem}h1{margin:0;font-size:1.55rem;letter-spacing:-.03em}.subtitle{margin:.3rem 0 0;color:var(--muted);font-size:.9rem}.card{overflow:hidden;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 1px 2px #1824330a}.card-header{display:flex;align-items:center;justify-content:space-between;gap:1rem;min-height:62px;padding:.75rem 1rem;border-bottom:1px solid var(--border)}.result-count{color:var(--muted);font-size:.85rem;font-weight:600}.filters{display:flex;gap:.65rem}input,select{min-height:37px;border:1px solid #cdd5df;border-radius:5px;padding:.45rem .7rem;background:#fff;font:inherit;color:var(--text)}input{width:min(310px,40vw)}table{width:100%;border-collapse:collapse;text-align:left}th{padding:.72rem 1rem;border-bottom:1px solid var(--border);background:#fafbfc;color:#6c7885;font-size:.72rem;letter-spacing:.035em;text-transform:uppercase}td{padding:.9rem 1rem;border-bottom:1px solid #edf0f3;font-size:.88rem}tbody tr{cursor:pointer}tbody tr:hover{background:#f8fafd}tbody tr:last-child td{border-bottom:0}.order-id{font-weight:700;color:var(--blue)}.muted{color:var(--muted)}.status{display:inline-flex;padding:.25rem .55rem;border-radius:999px;font-size:.75rem;font-weight:700;text-transform:capitalize}.status-paid{color:#18794e;background:#e6f6ee}.status-pending{color:#8a6100;background:#fff4ce}.status-payment_failed{color:#b42318;background:#feeceb}.status-expired{color:#596579;background:#edf0f4}.total{font-weight:700}.arrow{text-align:right;color:#94a0ad;font-size:1.2rem}.empty{text-align:center!important;padding:3.5rem 1rem!important;color:var(--muted)}.empty strong{display:block;margin-bottom:.3rem;color:var(--text)}
-      @media(max-width:800px){.shell{display:block}.sidebar{display:flex;align-items:center;overflow:auto;padding:.6rem}.brand{padding:.25rem .7rem .25rem .2rem}.brand-name,.nav-label,.nav-item[href="/documentation"]{display:none}.nav-item{white-space:nowrap}.page{padding:1.25rem 1rem}.card-header{align-items:stretch;flex-direction:column}.filters{flex-direction:column}input{width:100%}th:nth-child(3),td:nth-child(3){display:none}.table-wrap{overflow:auto}table{min-width:600px}}
+      :root {
+        --navy: #182433;
+        --navy-light: #26384d;
+        --blue: #206bc4;
+        --page: #f4f6fa;
+        --border: #dce1e7;
+        --text: #182433;
+        --muted: #667382;
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+        color: var(--text);
+        background: var(--page);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+      }
+      .shell {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: 260px 1fr;
+      }
+      .sidebar {
+        background: var(--navy);
+        color: #b8c2cc;
+        padding: 1.25rem 0.75rem;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        padding: 0.45rem 0.65rem 1.5rem;
+        color: #fff;
+        font-size: 1.15rem;
+        font-weight: 700;
+      }
+      .brand-mark {
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 7px;
+        background: var(--blue);
+        font-size: 0.9rem;
+      }
+      .nav-label {
+        padding: 0.5rem 0.65rem;
+        color: #8291a2;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+      }
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.7rem 0.75rem;
+        margin: 0.12rem 0;
+        border-radius: 6px;
+        color: #c4ced8;
+        text-decoration: none;
+        font-size: 0.92rem;
+      }
+      .nav-item.active,
+      .nav-item:hover {
+        background: var(--navy-light);
+        color: #fff;
+      }
+      .nav-icon {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+      }
+      .content {
+        min-width: 0;
+      }
+      .page {
+        max-width: 1380px;
+        padding: 2rem 2.25rem 3rem;
+        margin: auto;
+      }
+      .breadcrumb {
+        margin-bottom: 0.6rem;
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+      .page-heading {
+        margin-bottom: 1.5rem;
+      }
+      h1 {
+        margin: 0;
+        font-size: 1.55rem;
+        letter-spacing: -0.03em;
+      }
+      .subtitle {
+        margin: 0.3rem 0 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      .card {
+        overflow: hidden;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        box-shadow: 0 1px 2px #1824330a;
+      }
+      .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        min-height: 62px;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border);
+      }
+      .result-count {
+        color: var(--muted);
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+      .filters {
+        display: flex;
+        gap: 0.65rem;
+      }
+      input,
+      select {
+        min-height: 37px;
+        border: 1px solid #cdd5df;
+        border-radius: 5px;
+        padding: 0.45rem 0.7rem;
+        background: #fff;
+        font: inherit;
+        color: var(--text);
+      }
+      input {
+        width: min(310px, 40vw);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+      }
+      th {
+        padding: 0.72rem 1rem;
+        border-bottom: 1px solid var(--border);
+        background: #fafbfc;
+        color: #6c7885;
+        font-size: 0.72rem;
+        letter-spacing: 0.035em;
+        text-transform: uppercase;
+      }
+      td {
+        padding: 0.9rem 1rem;
+        border-bottom: 1px solid #edf0f3;
+        font-size: 0.88rem;
+      }
+      tbody tr {
+        cursor: pointer;
+      }
+      tbody tr:hover {
+        background: #f8fafd;
+      }
+      tbody tr:last-child td {
+        border-bottom: 0;
+      }
+      .order-id {
+        font-weight: 700;
+        color: var(--blue);
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .status {
+        display: inline-flex;
+        padding: 0.25rem 0.55rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: capitalize;
+      }
+      .status-paid {
+        color: #18794e;
+        background: #e6f6ee;
+      }
+      .status-pending {
+        color: #8a6100;
+        background: #fff4ce;
+      }
+      .status-payment_failed {
+        color: #b42318;
+        background: #feeceb;
+      }
+      .status-expired {
+        color: #596579;
+        background: #edf0f4;
+      }
+      .total {
+        font-weight: 700;
+      }
+      .arrow {
+        text-align: right;
+        color: #94a0ad;
+        font-size: 1.2rem;
+      }
+      .empty {
+        text-align: center !important;
+        padding: 3.5rem 1rem !important;
+        color: var(--muted);
+      }
+      .empty strong {
+        display: block;
+        margin-bottom: 0.3rem;
+        color: var(--text);
+      }
+      @media (max-width: 800px) {
+        .shell {
+          display: block;
+        }
+        .sidebar {
+          display: flex;
+          align-items: center;
+          overflow: auto;
+          padding: 0.6rem;
+        }
+        .brand {
+          padding: 0.25rem 0.7rem 0.25rem 0.2rem;
+        }
+        .brand-name,
+        .nav-label,
+        .nav-item[href="/documentation"] {
+          display: none;
+        }
+        .nav-item {
+          white-space: nowrap;
+        }
+        .page {
+          padding: 1.25rem 1rem;
+        }
+        .card-header {
+          align-items: stretch;
+          flex-direction: column;
+        }
+        .filters {
+          flex-direction: column;
+        }
+        input {
+          width: 100%;
+        }
+        th:nth-child(3),
+        td:nth-child(3) {
+          display: none;
+        }
+        .table-wrap {
+          overflow: auto;
+        }
+        table {
+          min-width: 600px;
+        }
+      }
     </style>
   </head>
   <body>
     <div class="shell">
       <aside class="sidebar">
-        <div class="brand"><span class="brand-mark">S</span><span class="brand-name">Shop Admin</span></div>
+        <div class="brand">
+          <span class="brand-mark">S</span><span class="brand-name">Shop Admin</span>
+        </div>
         <div class="nav-label">Catalog</div>
-        <a class="nav-item" href="/admin/"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 21v-13l9-5 9 5v13h-6v-6h-6v6z"/></svg>Products</a>
-        <a class="nav-item" href="/admin/product-options"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>Product options</a>
-        <div class="nav-label" style="margin-top:1rem">Sales</div>
-        <a class="nav-item active" href="/admin/orders"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M6 7h12l1 14H5L6 7zM9 9V6a3 3 0 0 1 6 0v3"/></svg>Orders</a>
-        <div class="nav-label" style="margin-top:1rem">System</div>
-        <a class="nav-item" href="/documentation"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 19.5v-15a2 2 0 0 1 2-2h12v19h-12a2 2 0 0 1-2-2zM8 7h6M8 11h6"/></svg>API documentation</a>
+        <a class="nav-item" href="/admin/"
+          ><svg class="nav-icon" viewBox="0 0 24 24">
+            <path d="M3 21v-13l9-5 9 5v13h-6v-6h-6v6z" /></svg
+          >Products</a
+        >
+        <a class="nav-item" href="/admin/product-options"
+          ><svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" /></svg
+          >Product options</a
+        >
+        <div class="nav-label" style="margin-top: 1rem">Sales</div>
+        <a class="nav-item active" href="/admin/orders"
+          ><svg class="nav-icon" viewBox="0 0 24 24">
+            <path d="M6 7h12l1 14H5L6 7zM9 9V6a3 3 0 0 1 6 0v3" /></svg
+          >Orders</a
+        >
+        <div class="nav-label" style="margin-top: 1rem">System</div>
+        <a class="nav-item" href="/documentation"
+          ><svg class="nav-icon" viewBox="0 0 24 24">
+            <path d="M4 19.5v-15a2 2 0 0 1 2-2h12v19h-12a2 2 0 0 1-2-2zM8 7h6M8 11h6" /></svg
+          >API documentation</a
+        >
       </aside>
-      <div class="content"><main class="page">
-        <div class="breadcrumb">Sales › Orders</div>
-        <div class="page-heading"><h1>Orders</h1><p class="subtitle">Review purchases and payment statuses.</p></div>
-        <section class="card"><header class="card-header"><span class="result-count" id="count"></span><div class="filters"><input id="search" type="search" placeholder="Search order or product…"/><select id="status" aria-label="Filter by status"><option value="">All statuses</option><option value="paid">Paid</option><option value="pending">Pending</option><option value="payment_failed">Payment failed</option><option value="expired">Expired</option></select></div></header>
-          <div class="table-wrap"><table><thead><tr><th>Order</th><th>Date</th><th>Items</th><th>Status</th><th>Total</th><th></th></tr></thead><tbody id="orders"><tr><td class="empty" colspan="6"><strong>Loading orders…</strong>Please wait a moment.</td></tr></tbody></table></div>
-        </section>
-      </main></div>
+      <div class="content">
+        <main class="page">
+          <div class="breadcrumb">Sales › Orders</div>
+          <div class="page-heading">
+            <h1>Orders</h1>
+            <p class="subtitle">Review purchases and payment statuses.</p>
+          </div>
+          <section class="card">
+            <header class="card-header">
+              <span class="result-count" id="count"></span>
+              <div class="filters">
+                <input id="search" type="search" placeholder="Search order or product…" /><select
+                  id="status"
+                  aria-label="Filter by status"
+                >
+                  <option value="">All statuses</option>
+                  <option value="paid">Paid</option>
+                  <option value="pending">Pending</option>
+                  <option value="payment_failed">Payment failed</option>
+                  <option value="expired">Expired</option>
+                </select>
+              </div>
+            </header>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Order</th>
+                    <th>Date</th>
+                    <th>Items</th>
+                    <th>Status</th>
+                    <th>Total</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="orders">
+                  <tr>
+                    <td class="empty" colspan="6">
+                      <strong>Loading orders…</strong>Please wait a moment.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </main>
+      </div>
     </div>
     <script>
-      const body=document.querySelector("#orders"),count=document.querySelector("#count"),search=document.querySelector("#search"),statusFilter=document.querySelector("#status");let orders=[]
-      const escapeHtml=value=>String(value??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"})[c])
-      const statusLabel=value=>({payment_failed:"Payment failed"})[value]||value
-      const totals=order=>Object.entries(order.items.reduce((all,item)=>{all[item.currency]=(all[item.currency]||0)+item.unitAmount*item.quantity;return all},{})).map(([currency,amount])=>new Intl.NumberFormat(undefined,{style:"currency",currency:currency.toUpperCase()}).format(amount/100)).join(" + ")||"—"
-      const render=()=>{const query=search.value.trim().toLowerCase(),status=statusFilter.value;const visible=orders.filter(order=>(!status||order.status===status)&&(!query||String(order.id).includes(query)||order.items.some(item=>item.productName.toLowerCase().includes(query))));count.textContent=`${visible.length} ${visible.length===1?"order":"orders"}`;body.innerHTML=visible.length?visible.map(order=>`<tr data-id="${order.id}" tabindex="0"><td class="order-id">#${order.id}</td><td>${new Intl.DateTimeFormat(undefined,{dateStyle:"medium",timeStyle:"short"}).format(new Date(order.createdAt))}</td><td>${order.items.reduce((sum,item)=>sum+item.quantity,0)}</td><td><span class="status status-${escapeHtml(order.status)}">${escapeHtml(statusLabel(order.status))}</span></td><td class="total">${escapeHtml(totals(order))}</td><td class="arrow">›</td></tr>`).join(""):'<tr><td class="empty" colspan="6"><strong>No orders found</strong>Try changing your filters.</td></tr>'}
-      const open=row=>location.href=`/admin/orders/${row.dataset.id}`;body.addEventListener("click",event=>{const row=event.target.closest("tr[data-id]");if(row)open(row)});body.addEventListener("keydown",event=>{const row=event.target.closest("tr[data-id]");if(row&&(event.key==="Enter"||event.key===" "))open(row)});search.addEventListener("input",render);statusFilter.addEventListener("change",render)
-      fetch("/orders").then(response=>{if(!response.ok)throw new Error();return response.json()}).then(data=>{orders=data;render()}).catch(()=>{count.textContent="";body.innerHTML='<tr><td class="empty" colspan="6"><strong>Could not load orders</strong>Refresh the page to try again.</td></tr>'})
+      const body = document.querySelector("#orders"),
+        count = document.querySelector("#count"),
+        search = document.querySelector("#search"),
+        statusFilter = document.querySelector("#status")
+      let orders = []
+      const escapeHtml = (value) =>
+        String(value ?? "").replace(
+          /[&<>'"]/g,
+          (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[c],
+        )
+      const statusLabel = (value) => ({ payment_failed: "Payment failed" })[value] || value
+      const totals = (order) =>
+        Object.entries(
+          order.items.reduce((all, item) => {
+            all[item.currency] = (all[item.currency] || 0) + item.unitAmount * item.quantity
+            return all
+          }, {}),
+        )
+          .map(([currency, amount]) =>
+            new Intl.NumberFormat(undefined, {
+              style: "currency",
+              currency: currency.toUpperCase(),
+            }).format(amount / 100),
+          )
+          .join(" + ") || "—"
+      const render = () => {
+        const query = search.value.trim().toLowerCase(),
+          status = statusFilter.value
+        const visible = orders.filter(
+          (order) =>
+            (!status || order.status === status) &&
+            (!query ||
+              String(order.id).includes(query) ||
+              order.items.some((item) => item.productName.toLowerCase().includes(query))),
+        )
+        count.textContent = `${visible.length} ${visible.length === 1 ? "order" : "orders"}`
+        body.innerHTML = visible.length
+          ? visible
+              .map(
+                (order) =>
+                  `<tr data-id="${order.id}" tabindex="0"><td class="order-id">#${order.id}</td><td>${new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(order.createdAt))}</td><td>${order.items.reduce((sum, item) => sum + item.quantity, 0)}</td><td><span class="status status-${escapeHtml(order.status)}">${escapeHtml(statusLabel(order.status))}</span></td><td class="total">${escapeHtml(totals(order))}</td><td class="arrow">›</td></tr>`,
+              )
+              .join("")
+          : '<tr><td class="empty" colspan="6"><strong>No orders found</strong>Try changing your filters.</td></tr>'
+      }
+      const open = (row) => (location.href = `/admin/orders/${row.dataset.id}`)
+      body.addEventListener("click", (event) => {
+        const row = event.target.closest("tr[data-id]")
+        if (row) open(row)
+      })
+      body.addEventListener("keydown", (event) => {
+        const row = event.target.closest("tr[data-id]")
+        if (row && (event.key === "Enter" || event.key === " ")) open(row)
+      })
+      search.addEventListener("input", render)
+      statusFilter.addEventListener("change", render)
+      fetch("/orders")
+        .then((response) => {
+          if (!response.ok) throw new Error()
+          return response.json()
+        })
+        .then((data) => {
+          orders = data
+          render()
+        })
+        .catch(() => {
+          count.textContent = ""
+          body.innerHTML =
+            '<tr><td class="empty" colspan="6"><strong>Could not load orders</strong>Refresh the page to try again.</td></tr>'
+        })
     </script>
   </body>
 </html>
