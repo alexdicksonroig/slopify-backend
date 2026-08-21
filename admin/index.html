@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Slopify Admin</title>
+    <title>Shop Admin</title>
     <style>
       :root {
         --navy: #182433;
@@ -663,7 +663,7 @@
     <div class="shell">
       <aside class="sidebar">
         <div class="brand">
-          <span class="brand-mark">S</span><span class="brand-name">Slopify Admin</span>
+          <span class="brand-mark">S</span><span class="brand-name">Shop Admin</span>
         </div>
         <div class="nav-label">Catalog</div>
         <a class="nav-item active" href="/admin/"
@@ -745,26 +745,6 @@
                 <span class="field-help">Loading variants…</span>
               </div>
             </div>
-            <label
-              >Variant thumbnails
-              <input
-                id="thumbnail"
-                name="thumbnail"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-              /><span class="field-help"
-                >Applied to every variant. JPEG, PNG, or WebP. Maximum 500 KB.</span
-              ></label
-            >
-            <div class="thumbnail-preview" id="thumbnail-preview" hidden>
-              <img id="thumbnail-preview-image" alt="Variant thumbnail preview" /><button
-                class="btn btn-danger"
-                id="remove-thumbnail"
-                type="button"
-              >
-                Remove thumbnail
-              </button>
-            </div>
             <p id="status" role="alert"></p>
           </div>
           <footer class="modal-footer">
@@ -784,19 +764,12 @@
       const search = document.querySelector("#search")
       const resultCount = document.querySelector("#result-count")
       const toast = document.querySelector("#toast")
-      const thumbnailInput = document.querySelector("#thumbnail")
-      const thumbnailPreview = document.querySelector("#thumbnail-preview")
-      const thumbnailPreviewImage = document.querySelector("#thumbnail-preview-image")
-      const removeThumbnailButton = document.querySelector("#remove-thumbnail")
       const variants = document.querySelector("#variants")
       let productOptions = []
       let loadedVariants = []
       let products = []
       let toastTimer
       let editingId = null
-      let removeThumbnail = false
-      let thumbnailObjectUrl = null
-      let currentThumbnailUrl = null
 
       const escapeHtml = (value) =>
         String(value ?? "").replace(
@@ -821,34 +794,15 @@
           toast.hidden = true
         }, 2800)
       }
-      const clearThumbnailObjectUrl = () => {
-        if (thumbnailObjectUrl) URL.revokeObjectURL(thumbnailObjectUrl)
-        thumbnailObjectUrl = null
-      }
-      const showThumbnailPreview = (url) => {
-        thumbnailPreviewImage.src = url
-        thumbnailPreview.hidden = false
-      }
-      const resetThumbnailEditor = (thumbnailUrl = null) => {
-        clearThumbnailObjectUrl()
-        thumbnailInput.value = ""
-        removeThumbnail = false
-        currentThumbnailUrl = thumbnailUrl
-        if (thumbnailUrl) showThumbnailPreview(thumbnailUrl)
-        else {
-          thumbnailPreviewImage.removeAttribute("src")
-          thumbnailPreview.hidden = true
-        }
-      }
       const variantHtml = (variant = { unitAmount: "", currency: "", selections: [] }) =>
-        `<div class="variant-card"${variant.id ? ` data-variant-id="${variant.id}"` : ""}><div class="variant-card-header"><label>Amount (minor units) <input data-variant-unit-amount type="number" min="1" step="1" required value="${escapeHtml(variant.unitAmount)}"></label><label>Currency <input data-variant-currency required minlength="3" maxlength="3" value="${escapeHtml(variant.currency)}"></label><button class="btn btn-danger" data-action="remove-variant" type="button">Remove</button></div>${productOptions
+        `<div class="variant-card"${variant.id ? ` data-variant-id="${variant.id}"` : ""} data-has-thumbnail="${Boolean(variant.thumbnailUrl)}"><div class="variant-card-header"><label>Amount (minor units) <input data-variant-unit-amount type="number" min="1" step="1" required value="${escapeHtml(variant.unitAmount)}"></label><label>Currency <input data-variant-currency required minlength="3" maxlength="3" value="${escapeHtml(variant.currency)}"></label><button class="btn btn-danger" data-action="remove-variant" type="button">Remove</button></div><label class="variant-row"><span>Thumbnail</span><input data-variant-thumbnail type="file" accept="image/jpeg,image/png,image/webp"></label><div class="thumbnail-preview" data-variant-thumbnail-preview${variant.thumbnailUrl ? "" : " hidden"}><img data-variant-thumbnail-image alt="Variant thumbnail preview"${variant.thumbnailUrl ? ` src="${escapeHtml(variant.thumbnailUrl)}"` : ""}><button class="btn btn-danger" data-action="remove-thumbnail" type="button">Remove thumbnail</button></div>${productOptions
           .map((option) => {
             const selection = variant.selections.find((item) => item.option.id === option.id)
             return `<label class="variant-row"><span>${escapeHtml(option.label)}</span><select data-option-id="${option.id}"><option value="">Not used</option>${option.possibleValues.map((value) => `<option value="${value.id}"${selection?.value.id === value.id ? " selected" : ""}>${escapeHtml(value.label)}</option>`).join("")}</select></label>`
           })
           .join("")}</div>`
-      const renderVariants = (variants) => {
-        variants.innerHTML = `${variants.map(variantHtml).join("")}<button class="btn btn-outline" data-action="add-variant" type="button">+ Add variant</button>`
+      const renderVariants = (variantRecords) => {
+        variants.innerHTML = `${variantRecords.map(variantHtml).join("")}<button class="btn btn-outline" data-action="add-variant" type="button">+ Add variant</button>`
       }
       const loadVariants = async (productId = null) => {
         submit.disabled = true
@@ -871,7 +825,6 @@
       const closeModal = () => {
         modal.hidden = true
         form.reset()
-        resetThumbnailEditor()
         variants.innerHTML = ""
         loadedVariants = []
         submit.disabled = false
@@ -881,7 +834,6 @@
       const openCreate = async () => {
         editingId = null
         form.reset()
-        resetThumbnailEditor()
         clearError()
         modalTitle.textContent = "Create product"
         submit.textContent = "Create product"
@@ -941,10 +893,12 @@
         }
 
         const savedProduct = await response.json()
-        const variants = [...variants.querySelectorAll(".variant-card")].map((variant) => ({
+        const variantInputs = [...variants.querySelectorAll(".variant-card")].map((variant) => ({
           id: variant.dataset.variantId ? Number(variant.dataset.variantId) : null,
           unitAmount: Number(variant.querySelector("[data-variant-unit-amount]").value),
           currency: variant.querySelector("[data-variant-currency]").value,
+          thumbnail: variant.querySelector("[data-variant-thumbnail]").files[0],
+          removeThumbnail: variant.dataset.removeThumbnail === "true",
           selections: [...variant.querySelectorAll("select[data-option-id]")]
             .filter((select) => select.value)
             .map((select) => ({
@@ -953,10 +907,11 @@
             })),
         }))
         let variantChangeFailed = false
-        const savedVariantIds = []
         try {
           const initialVariants = new Map(loadedVariants.map((variant) => [variant.id, variant]))
-          const retainedVariantIds = new Set(variants.map((variant) => variant.id).filter(Boolean))
+          const retainedVariantIds = new Set(
+            variantInputs.map((variant) => variant.id).filter(Boolean),
+          )
           for (const variant of loadedVariants) {
             if (retainedVariantIds.has(variant.id)) continue
             const deleteResponse = await fetch(`/variants/${variant.id}`, {
@@ -964,7 +919,7 @@
             })
             if (!deleteResponse.ok) throw new Error()
           }
-          for (const variant of variants) {
+          for (const variant of variantInputs) {
             let variantId = variant.id
             if (!variantId) {
               const createResponse = await fetch(`/products/${savedProduct.id}/variants`, {
@@ -979,7 +934,6 @@
               variantId = (await createResponse.json()).id
             }
 
-            savedVariantIds.push(variantId)
             const previousSelections = new Map(
               (initialVariants.get(variantId)?.selections || []).map((selection) => [
                 selection.option.id,
@@ -1006,35 +960,23 @@
               })
               if (!addResponse.ok) throw new Error()
             }
-          }
-        } catch {
-          variantChangeFailed = true
-        }
-
-        const thumbnail = thumbnailInput.files[0]
-        let thumbnailChangeFailed = false
-        try {
-          let thumbnailResponse = null
-          for (const variantId of savedVariantIds) {
-            if (thumbnail) {
+            if (variant.thumbnail) {
               const thumbnailBody = new FormData()
-              thumbnailBody.append("thumbnail", thumbnail)
-              thumbnailResponse = await fetch(`/variants/${variantId}/thumbnail`, {
+              thumbnailBody.append("thumbnail", variant.thumbnail)
+              const thumbnailResponse = await fetch(`/variants/${variantId}/thumbnail`, {
                 method: "PUT",
                 body: thumbnailBody,
               })
-            } else if (removeThumbnail && wasEditing) {
-              thumbnailResponse = await fetch(`/variants/${variantId}/thumbnail`, {
+              if (!thumbnailResponse.ok) throw new Error()
+            } else if (variant.removeThumbnail) {
+              const thumbnailResponse = await fetch(`/variants/${variantId}/thumbnail`, {
                 method: "DELETE",
               })
-            }
-            if (thumbnailResponse && !thumbnailResponse.ok) {
-              thumbnailChangeFailed = true
-              break
+              if (!thumbnailResponse.ok) throw new Error()
             }
           }
         } catch {
-          thumbnailChangeFailed = true
+          variantChangeFailed = true
         }
 
         const message = wasEditing
@@ -1042,10 +984,7 @@
           : "Product created successfully."
         closeModal()
         await loadProducts()
-        const failedChanges = [
-          variantChangeFailed && "variants",
-          thumbnailChangeFailed && "thumbnail",
-        ].filter(Boolean)
+        const failedChanges = [variantChangeFailed && "variants"].filter(Boolean)
         if (failedChanges.length)
           return showToast(`${message} Could not update ${failedChanges.join(" and ")}.`, true)
         showToast(message)
@@ -1056,6 +995,12 @@
         if (!button) return
         if (button.dataset.action === "remove-variant") {
           button.closest(".variant-card").remove()
+        }
+        if (button.dataset.action === "remove-thumbnail") {
+          const card = button.closest(".variant-card")
+          card.querySelector("[data-variant-thumbnail]").value = ""
+          card.dataset.removeThumbnail = String(card.dataset.hasThumbnail === "true")
+          card.querySelector("[data-variant-thumbnail-preview]").hidden = true
         }
         if (button.dataset.action === "add-variant") {
           const firstVariant = variants.querySelector(".variant-card")
@@ -1091,32 +1036,20 @@
         showToast("Product deleted successfully.")
       })
 
-      thumbnailInput.addEventListener("change", () => {
-        clearError()
-        clearThumbnailObjectUrl()
-        removeThumbnail = false
-        const file = thumbnailInput.files[0]
-        if (!file) {
-          if (currentThumbnailUrl) showThumbnailPreview(currentThumbnailUrl)
-          else thumbnailPreview.hidden = true
-          return
-        }
+      variants.addEventListener("change", (event) => {
+        const input = event.target.closest("[data-variant-thumbnail]")
+        if (!input) return
+        const file = input.files[0]
+        if (!file) return
         if (file.size > 500000) {
-          thumbnailInput.value = ""
-          showError("Variant thumbnails must not exceed 500 KB.")
-          if (currentThumbnailUrl) showThumbnailPreview(currentThumbnailUrl)
-          else thumbnailPreview.hidden = true
-          return
+          input.value = ""
+          return showError("A variant thumbnail must not exceed 500 KB.")
         }
-        thumbnailObjectUrl = URL.createObjectURL(file)
-        showThumbnailPreview(thumbnailObjectUrl)
-      })
-      removeThumbnailButton.addEventListener("click", () => {
-        clearThumbnailObjectUrl()
-        thumbnailInput.value = ""
-        removeThumbnail = Boolean(currentThumbnailUrl)
-        thumbnailPreviewImage.removeAttribute("src")
-        thumbnailPreview.hidden = true
+        const card = input.closest(".variant-card")
+        card.dataset.removeThumbnail = "false"
+        const preview = card.querySelector("[data-variant-thumbnail-preview]")
+        preview.querySelector("[data-variant-thumbnail-image]").src = URL.createObjectURL(file)
+        preview.hidden = false
       })
 
       document.querySelector("#close-modal").addEventListener("click", closeModal)

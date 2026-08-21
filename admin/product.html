@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Edit product · Slopify Admin</title>
+    <title>Edit product · Shop Admin</title>
     <style>
       :root {
         --navy: #182433;
@@ -413,7 +413,7 @@
     <div class="shell">
       <aside class="sidebar">
         <div class="brand">
-          <span class="brand-mark">S</span><span class="brand-name">Slopify Admin</span>
+          <span class="brand-mark">S</span><span class="brand-name">Shop Admin</span>
         </div>
         <div class="nav-label">Catalog</div>
         <a class="nav-item active" href="/admin/"
@@ -470,27 +470,6 @@
                 </div>
               </div>
             </section>
-            <section class="card">
-              <header class="card-header">
-                <h2>Variant thumbnails</h2>
-                <p>Apply the same JPEG, PNG, or WebP thumbnail to every variant. Maximum 500 KB.</p>
-              </header>
-              <div class="card-body">
-                <label
-                  >Upload new variant thumbnails
-                  <input id="thumbnail" type="file" accept="image/jpeg,image/png,image/webp"
-                /></label>
-                <div class="thumbnail-preview" id="thumbnail-preview" hidden>
-                  <img id="thumbnail-preview-image" alt="Product thumbnail preview" /><button
-                    class="btn btn-danger"
-                    id="remove-thumbnail"
-                    type="button"
-                  >
-                    Remove thumbnail
-                  </button>
-                </div>
-              </div>
-            </section>
             <footer class="form-footer">
               <p id="status" role="status"></p>
               <div class="form-footer-actions">
@@ -513,14 +492,8 @@
       const submit = document.querySelector("#submit")
       const status = document.querySelector("#status")
       const variantsContainer = document.querySelector("#variants")
-      const thumbnailInput = document.querySelector("#thumbnail")
-      const thumbnailPreview = document.querySelector("#thumbnail-preview")
-      const thumbnailPreviewImage = document.querySelector("#thumbnail-preview-image")
       let productOptions = []
       let loadedVariants = []
-      let currentThumbnailUrl = null
-      let removeThumbnail = false
-      let thumbnailObjectUrl = null
 
       const escapeHtml = (value) =>
         String(value ?? "").replace(
@@ -532,16 +505,8 @@
         status.textContent = message
         status.className = type
       }
-      const clearThumbnailObjectUrl = () => {
-        if (thumbnailObjectUrl) URL.revokeObjectURL(thumbnailObjectUrl)
-        thumbnailObjectUrl = null
-      }
-      const showThumbnail = (url) => {
-        thumbnailPreviewImage.src = url
-        thumbnailPreview.hidden = false
-      }
       const variantHtml = (variant = { unitAmount: "", currency: "", selections: [] }) =>
-        `<div class="variant-card"${variant.id ? ` data-variant-id="${variant.id}"` : ""}><div class="variant-card-header"><label>Amount (minor units) <input data-variant-unit-amount type="number" min="1" step="1" required value="${escapeHtml(variant.unitAmount)}"></label><label>Currency <input data-variant-currency required minlength="3" maxlength="3" value="${escapeHtml(variant.currency)}"></label><button class="btn btn-danger" data-action="remove-variant" type="button">Remove</button></div>${productOptions
+        `<div class="variant-card"${variant.id ? ` data-variant-id="${variant.id}"` : ""} data-has-thumbnail="${Boolean(variant.thumbnailUrl)}"><div class="variant-card-header"><label>Amount (minor units) <input data-variant-unit-amount type="number" min="1" step="1" required value="${escapeHtml(variant.unitAmount)}"></label><label>Currency <input data-variant-currency required minlength="3" maxlength="3" value="${escapeHtml(variant.currency)}"></label><button class="btn btn-danger" data-action="remove-variant" type="button">Remove</button></div><label class="variant-row"><span>Thumbnail</span><input data-variant-thumbnail type="file" accept="image/jpeg,image/png,image/webp"></label><div class="thumbnail-preview" data-variant-thumbnail-preview${variant.thumbnailUrl ? "" : " hidden"}><img data-variant-thumbnail-image alt="Variant thumbnail preview"${variant.thumbnailUrl ? ` src="${escapeHtml(variant.thumbnailUrl)}"` : ""}><button class="btn btn-danger" data-action="remove-thumbnail" type="button">Remove thumbnail</button></div>${productOptions
           .map((option) => {
             const selection = variant.selections.find((item) => item.option.id === option.id)
             return `<label class="variant-row"><span>${escapeHtml(option.label)}</span><select data-option-id="${option.id}"><option value="">Not used</option>${option.possibleValues.map((value) => `<option value="${value.id}"${selection?.value.id === value.id ? " selected" : ""}>${escapeHtml(value.label)}</option>`).join("")}</select></label>`
@@ -564,7 +529,7 @@
             document.querySelector("#subtitle").textContent = "Add a product to your catalog."
             document.querySelector("#details-description").textContent =
               "Enter the details for the new product."
-            document.title = "New product · Slopify Admin"
+            document.title = "New product · Shop Admin"
             submit.textContent = "Create product"
             renderVariants()
             submit.disabled = false
@@ -583,12 +548,9 @@
           loadedVariants = await variantsResponse.json()
           form.name.value = product.name
           form.description.value = product.description || ""
-          currentThumbnailUrl =
-            loadedVariants.find((variant) => variant.thumbnailUrl)?.thumbnailUrl ?? null
-          if (currentThumbnailUrl) showThumbnail(currentThumbnailUrl)
           document.querySelector("#page-title").textContent = `Edit ${product.name}`
           document.querySelector("#subtitle").textContent = `Product #${product.id}`
-          document.title = `Edit ${product.name} · Slopify Admin`
+          document.title = `Edit ${product.name} · Shop Admin`
           renderVariants()
           submit.disabled = false
         } catch {
@@ -607,6 +569,8 @@
             id: variant.dataset.variantId ? Number(variant.dataset.variantId) : null,
             unitAmount: Number(variant.querySelector("[data-variant-unit-amount]").value),
             currency: variant.querySelector("[data-variant-currency]").value,
+            thumbnail: variant.querySelector("[data-variant-thumbnail]").files[0],
+            removeThumbnail: variant.dataset.removeThumbnail === "true",
             selections: [...variant.querySelectorAll("select[data-option-id]")]
               .filter((select) => select.value)
               .map((select) => ({
@@ -622,7 +586,6 @@
           const response = await fetch(`/variants/${variant.id}`, { method: "DELETE" })
           if (!response.ok) throw new Error()
         }
-        const savedVariantIds = []
         for (const variant of variants) {
           let variantId = variant.id
           if (!variantId) {
@@ -637,7 +600,6 @@
             if (!response.ok) throw new Error()
             variantId = (await response.json()).id
           }
-          savedVariantIds.push(variantId)
           const previous = new Map(
             (initialVariants.get(variantId)?.selections || []).map((selection) => [
               selection.option.id,
@@ -663,8 +625,21 @@
             })
             if (!response.ok) throw new Error()
           }
+          if (variant.thumbnail) {
+            const body = new FormData()
+            body.append("thumbnail", variant.thumbnail)
+            const response = await fetch(`/variants/${variantId}/thumbnail`, {
+              method: "PUT",
+              body,
+            })
+            if (!response.ok) throw new Error()
+          } else if (variant.removeThumbnail) {
+            const response = await fetch(`/variants/${variantId}/thumbnail`, {
+              method: "DELETE",
+            })
+            if (!response.ok) throw new Error()
+          }
         }
-        return savedVariantIds
       }
 
       form.addEventListener("submit", async (event) => {
@@ -687,25 +662,7 @@
           }
           const savedProduct = await response.json()
           activeProductId = savedProduct.id
-          const savedVariantIds = await syncVariants()
-          const thumbnail = thumbnailInput.files[0]
-          for (const variantId of savedVariantIds) {
-            let thumbnailResponse
-            if (thumbnail) {
-              const body = new FormData()
-              body.append("thumbnail", thumbnail)
-              thumbnailResponse = await fetch(`/variants/${variantId}/thumbnail`, {
-                method: "PUT",
-                body,
-              })
-            } else if (removeThumbnail) {
-              thumbnailResponse = await fetch(`/variants/${variantId}/thumbnail`, {
-                method: "DELETE",
-              })
-            }
-            if (thumbnailResponse && !thumbnailResponse.ok)
-              throw new Error("Product saved, but the variant thumbnails could not be updated.")
-          }
+          await syncVariants()
           showStatus(
             isCreating ? "Product created successfully." : "Product saved successfully.",
             "success",
@@ -724,6 +681,12 @@
         const button = event.target.closest("button[data-action]")
         if (!button) return
         if (button.dataset.action === "remove-variant") button.closest(".variant-card").remove()
+        if (button.dataset.action === "remove-thumbnail") {
+          const card = button.closest(".variant-card")
+          card.querySelector("[data-variant-thumbnail]").value = ""
+          card.dataset.removeThumbnail = String(card.dataset.hasThumbnail === "true")
+          card.querySelector("[data-variant-thumbnail-preview]").hidden = true
+        }
         if (button.dataset.action === "add-variant") {
           const first = variantsContainer.querySelector(".variant-card")
           const selections = first
@@ -740,30 +703,20 @@
           )
         }
       })
-      thumbnailInput.addEventListener("change", () => {
-        clearThumbnailObjectUrl()
-        removeThumbnail = false
-        const file = thumbnailInput.files[0]
-        if (!file)
-          return currentThumbnailUrl
-            ? showThumbnail(currentThumbnailUrl)
-            : (thumbnailPreview.hidden = true)
+      variantsContainer.addEventListener("change", (event) => {
+        const input = event.target.closest("[data-variant-thumbnail]")
+        if (!input) return
+        const file = input.files[0]
+        if (!file) return
         if (file.size > 500000) {
-          thumbnailInput.value = ""
-          showStatus("Variant thumbnails must not exceed 500 KB.")
-          return currentThumbnailUrl
-            ? showThumbnail(currentThumbnailUrl)
-            : (thumbnailPreview.hidden = true)
+          input.value = ""
+          return showStatus("A variant thumbnail must not exceed 500 KB.")
         }
-        thumbnailObjectUrl = URL.createObjectURL(file)
-        showThumbnail(thumbnailObjectUrl)
-      })
-      document.querySelector("#remove-thumbnail").addEventListener("click", () => {
-        clearThumbnailObjectUrl()
-        thumbnailInput.value = ""
-        removeThumbnail = Boolean(currentThumbnailUrl)
-        thumbnailPreviewImage.removeAttribute("src")
-        thumbnailPreview.hidden = true
+        const card = input.closest(".variant-card")
+        card.dataset.removeThumbnail = "false"
+        const preview = card.querySelector("[data-variant-thumbnail-preview]")
+        preview.querySelector("[data-variant-thumbnail-image]").src = URL.createObjectURL(file)
+        preview.hidden = false
       })
       load()
     </script>
