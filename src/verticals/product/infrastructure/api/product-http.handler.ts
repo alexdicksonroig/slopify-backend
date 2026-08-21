@@ -4,23 +4,11 @@ import { deleteProductUseCase } from "../../application/delete-product.use-case"
 import { getProductUseCase } from "../../application/get-product.use-case"
 import { listProductsUseCase } from "../../application/list-products.use-case"
 import { updateProductUseCase } from "../../application/update-product.use-case"
-import { type ProductSort } from "../../domain/product.repository"
 import { r2Adapter } from "../r2.adapter"
 
 class ProductHandler {
-  list = async (
-    request: FastifyRequest<{
-      Querystring: Record<string, string> & { sort?: ProductSort }
-    }>,
-  ) => {
-    const { sort, ...filters } = request.query
-    const products = await listProductsUseCase.execute(
-      Object.entries(filters).map(([optionId, valueId]) => ({
-        optionId: Number(optionId),
-        valueId: Number(valueId),
-      })),
-      sort,
-    )
+  list = async () => {
+    const products = await listProductsUseCase.execute()
     return products.map((product) => ({
       id: product.id,
       name: product.name,

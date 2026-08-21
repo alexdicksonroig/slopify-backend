@@ -28,6 +28,26 @@ const selectionParams = {
 }
 
 const router: FastifyPluginAsync = async (fastify): Promise<void> => {
+  fastify.get<{ Querystring: Record<string, string> }>(
+    "/variants",
+    {
+      schema: {
+        querystring: {
+          type: "object",
+          propertyNames: { type: "string", pattern: "^[1-9][0-9]*$" },
+          additionalProperties: { type: "string", pattern: "^[1-9][0-9]*$" },
+        },
+      },
+    },
+    variantHandler.list,
+  )
+
+  fastify.get<{ Params: { variantId: string } }>(
+    "/variants/:variantId",
+    { schema: { params: variantIdParams } },
+    variantHandler.get,
+  )
+
   fastify.get<{
     Params: { productId: string }
   }>(

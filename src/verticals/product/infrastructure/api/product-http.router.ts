@@ -1,6 +1,5 @@
 import multipart from "@fastify/multipart"
 import { type FastifyPluginAsync } from "fastify"
-import { type ProductSort } from "../../domain/product.repository"
 import { productHandler } from "./product-http.handler"
 import { productThumbnailHandler } from "./product-thumbnail-http.handler"
 
@@ -23,26 +22,7 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
     limits: { fileSize: 500_000, files: 1, parts: 1 },
   })
 
-  fastify.get<{
-    Querystring: Record<string, string> & { sort?: ProductSort }
-  }>(
-    "/products",
-    {
-      schema: {
-        querystring: {
-          type: "object",
-          propertyNames: {
-            anyOf: [{ const: "sort" }, { type: "string", pattern: "^[1-9][0-9]*$" }],
-          },
-          properties: {
-            sort: { type: "string", enum: ["newest", "price-asc", "price-desc"] },
-          },
-          additionalProperties: { type: "string", pattern: "^[1-9][0-9]*$" },
-        },
-      },
-    },
-    productHandler.list,
-  )
+  fastify.get("/products", productHandler.list)
 
   fastify.get<{ Params: { id: string } }>(
     "/products/:id",
