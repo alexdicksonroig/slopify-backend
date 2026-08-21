@@ -461,23 +461,23 @@
             </section>
             <section class="card">
               <header class="card-header">
-                <h2>Product variants</h2>
+                <h2>Variants</h2>
                 <p>Manage prices and option combinations.</p>
               </header>
               <div class="card-body">
-                <div class="variant-list" id="product-variants">
-                  <span class="field-help">Loading product variants…</span>
+                <div class="variant-list" id="variants">
+                  <span class="field-help">Loading variants…</span>
                 </div>
               </div>
             </section>
             <section class="card">
               <header class="card-header">
-                <h2>Thumbnail</h2>
-                <p>JPEG, PNG, or WebP. Maximum 500 KB.</p>
+                <h2>Variant thumbnails</h2>
+                <p>Apply the same JPEG, PNG, or WebP thumbnail to every variant. Maximum 500 KB.</p>
               </header>
               <div class="card-body">
                 <label
-                  >Upload a new thumbnail
+                  >Upload new variant thumbnails
                   <input id="thumbnail" type="file" accept="image/jpeg,image/png,image/webp"
                 /></label>
                 <div class="thumbnail-preview" id="thumbnail-preview" hidden>
@@ -512,7 +512,7 @@
       const form = document.querySelector("#product-form")
       const submit = document.querySelector("#submit")
       const status = document.querySelector("#status")
-      const variantsContainer = document.querySelector("#product-variants")
+      const variantsContainer = document.querySelector("#variants")
       const thumbnailInput = document.querySelector("#thumbnail")
       const thumbnailPreview = document.querySelector("#thumbnail-preview")
       const thumbnailPreviewImage = document.querySelector("#thumbnail-preview-image")
@@ -548,7 +548,7 @@
           })
           .join("")}</div>`
       const renderVariants = () => {
-        variantsContainer.innerHTML = `${loadedVariants.map(variantHtml).join("")}<button class="btn btn-outline" data-action="add-variant" type="button">+ Add product variant</button>`
+        variantsContainer.innerHTML = `${loadedVariants.map(variantHtml).join("")}<button class="btn btn-outline" data-action="add-variant" type="button">+ Add variant</button>`
       }
 
       const load = async () => {
@@ -583,7 +583,8 @@
           loadedVariants = await variantsResponse.json()
           form.name.value = product.name
           form.description.value = product.description || ""
-          currentThumbnailUrl = product.thumbnailUrl
+          currentThumbnailUrl =
+            loadedVariants.find((variant) => variant.thumbnailUrl)?.thumbnailUrl ?? null
           if (currentThumbnailUrl) showThumbnail(currentThumbnailUrl)
           document.querySelector("#page-title").textContent = `Edit ${product.name}`
           document.querySelector("#subtitle").textContent = `Product #${product.id}`
@@ -618,9 +619,10 @@
         const retainedIds = new Set(variants.map((variant) => variant.id).filter(Boolean))
         for (const variant of loadedVariants) {
           if (retainedIds.has(variant.id)) continue
-          const response = await fetch(`/product-variants/${variant.id}`, { method: "DELETE" })
+          const response = await fetch(`/variants/${variant.id}`, { method: "DELETE" })
           if (!response.ok) throw new Error()
         }
+        const savedVariantIds = []
         for (const variant of variants) {
           let variantId = variant.id
           if (!variantId) {
@@ -635,6 +637,7 @@
             if (!response.ok) throw new Error()
             variantId = (await response.json()).id
           }
+          savedVariantIds.push(variantId)
           const previous = new Map(
             (initialVariants.get(variantId)?.selections || []).map((selection) => [
               selection.option.id,
@@ -646,14 +649,14 @@
           )
           for (const [optionId, valueId] of previous) {
             if (next.get(optionId) === valueId) continue
-            const response = await fetch(`/product-variants/${variantId}/selections/${optionId}`, {
+            const response = await fetch(`/variants/${variantId}/selections/${optionId}`, {
               method: "DELETE",
             })
             if (!response.ok) throw new Error()
           }
           for (const [optionId, valueId] of next) {
             if (previous.get(optionId) === valueId) continue
-            const response = await fetch(`/product-variants/${variantId}/selections`, {
+            const response = await fetch(`/variants/${variantId}/selections`, {
               method: "POST",
               headers: { "content-type": "application/json" },
               body: JSON.stringify({ optionId, valueId }),
@@ -661,6 +664,7 @@
             if (!response.ok) throw new Error()
           }
         }
+        return savedVariantIds
       }
 
       form.addEventListener("submit", async (event) => {
@@ -683,23 +687,24 @@
           }
           const savedProduct = await response.json()
           activeProductId = savedProduct.id
-          await syncVariants()
+          const savedVariantIds = await syncVariants()
           const thumbnail = thumbnailInput.files[0]
-          if (thumbnail) {
-            const body = new FormData()
-            body.append("thumbnail", thumbnail)
-            const thumbnailResponse = await fetch(`/products/${activeProductId}/thumbnail`, {
-              method: "PUT",
-              body,
-            })
-            if (!thumbnailResponse.ok)
-              throw new Error("Product saved, but the thumbnail could not be updated.")
-          } else if (removeThumbnail) {
-            const thumbnailResponse = await fetch(`/products/${activeProductId}/thumbnail`, {
-              method: "DELETE",
-            })
-            if (!thumbnailResponse.ok)
-              throw new Error("Product saved, but the thumbnail could not be removed.")
+          for (const variantId of savedVariantIds) {
+            let thumbnailResponse
+            if (thumbnail) {
+              const body = new FormData()
+              body.append("thumbnail", thumbnail)
+              thumbnailResponse = await fetch(`/variants/${variantId}/thumbnail`, {
+                method: "PUT",
+                body,
+              })
+            } else if (removeThumbnail) {
+              thumbnailResponse = await fetch(`/variants/${variantId}/thumbnail`, {
+                method: "DELETE",
+              })
+            }
+            if (thumbnailResponse && !thumbnailResponse.ok)
+              throw new Error("Product saved, but the variant thumbnails could not be updated.")
           }
           showStatus(
             isCreating ? "Product created successfully." : "Product saved successfully.",
@@ -745,7 +750,7 @@
             : (thumbnailPreview.hidden = true)
         if (file.size > 500000) {
           thumbnailInput.value = ""
-          showStatus("Product thumbnail must not exceed 500 KB.")
+          showStatus("Variant thumbnails must not exceed 500 KB.")
           return currentThumbnailUrl
             ? showThumbnail(currentThumbnailUrl)
             : (thumbnailPreview.hidden = true)

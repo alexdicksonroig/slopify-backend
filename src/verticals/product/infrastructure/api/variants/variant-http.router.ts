@@ -1,5 +1,7 @@
+import multipart from "@fastify/multipart"
 import { type FastifyPluginAsync } from "fastify"
 import { variantHandler } from "./variant-http.handler"
+import { variantThumbnailHandler } from "./variant-thumbnail-http.handler"
 
 const positiveId = { type: "string", pattern: "^[1-9][0-9]*$" }
 
@@ -28,6 +30,10 @@ const selectionParams = {
 }
 
 const router: FastifyPluginAsync = async (fastify): Promise<void> => {
+  await fastify.register(multipart, {
+    limits: { fileSize: 500_000, files: 1, parts: 1 },
+  })
+
   fastify.get<{ Querystring: Record<string, string> }>(
     "/variants",
     {
@@ -80,8 +86,20 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
     variantHandler.create,
   )
 
+  fastify.put<{ Params: { variantId: string } }>(
+    "/variants/:variantId/thumbnail",
+    { schema: { params: variantIdParams } },
+    variantThumbnailHandler.upload,
+  )
+
   fastify.delete<{ Params: { variantId: string } }>(
-    "/product-variants/:variantId",
+    "/variants/:variantId/thumbnail",
+    { schema: { params: variantIdParams } },
+    variantThumbnailHandler.remove,
+  )
+
+  fastify.delete<{ Params: { variantId: string } }>(
+    "/variants/:variantId",
     { schema: { params: variantIdParams } },
     variantHandler.delete,
   )
@@ -90,7 +108,7 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
     Params: { variantId: string }
     Body: { optionId: number; valueId: number }
   }>(
-    "/product-variants/:variantId/selections",
+    "/variants/:variantId/selections",
     {
       schema: {
         params: variantIdParams,
@@ -111,7 +129,7 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
   fastify.delete<{
     Params: { variantId: string; optionId: string }
   }>(
-    "/product-variants/:variantId/selections/:optionId",
+    "/variants/:variantId/selections/:optionId",
     { schema: { params: selectionParams } },
     variantHandler.deleteSelection,
   )

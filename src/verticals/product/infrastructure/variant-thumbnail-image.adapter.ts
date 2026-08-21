@@ -3,7 +3,7 @@ import sharp from "sharp"
 const DEFAULT_BACKGROUND_COLOR = "#ffffff"
 const DEFAULT_QUALITY = 80
 
-export const productThumbnailImageAdapter = {
+export const variantThumbnailImageAdapter = {
   convertToWebp: async (originalBuffer: Buffer): Promise<Buffer> => {
     const metadata = await sharp(originalBuffer).metadata()
     const size = Math.max(metadata.autoOrient.width, metadata.autoOrient.height)

@@ -4,7 +4,6 @@ export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
-  thumbnailReference: text("thumbnail_reference"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 })
@@ -22,22 +21,23 @@ export const productOptionValues = pgTable("product_option_values", {
   label: text("label").notNull(),
 })
 
-export const productVariants = pgTable("product_variants", {
+export const variants = pgTable("variants", {
   id: serial("id").primaryKey(),
   productId: integer("product_id").notNull(),
   unitAmount: integer("unit_amount"),
   currency: text("currency"),
+  thumbnailReference: text("thumbnail_reference"),
 })
 
 export const selectedOptions = pgTable(
-  "product_variant_selections",
+  "variant_selections",
   {
     productId: integer("product_id")
       .notNull()
       .references(() => products.id, { onDelete: "cascade" }),
-    productVariantId: integer("product_variant_id")
+    variantId: integer("variant_id")
       .notNull()
-      .references(() => productVariants.id, { onDelete: "cascade" }),
+      .references(() => variants.id, { onDelete: "cascade" }),
     productOptionId: integer("product_option_id")
       .notNull()
       .references(() => productOptions.id, { onDelete: "cascade" }),
@@ -46,8 +46,8 @@ export const selectedOptions = pgTable(
       .references(() => productOptionValues.id, { onDelete: "restrict" }),
   },
   (table) => [
-    primaryKey({ columns: [table.productVariantId, table.productOptionId] }),
-    index("product_variant_selections_filter_idx").on(
+    primaryKey({ columns: [table.variantId, table.productOptionId] }),
+    index("variant_selections_filter_idx").on(
       table.productOptionId,
       table.productOptionValueId,
       table.productId,

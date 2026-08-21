@@ -1,7 +1,5 @@
-import multipart from "@fastify/multipart"
 import { type FastifyPluginAsync } from "fastify"
 import { productHandler } from "./product-http.handler"
-import { productThumbnailHandler } from "./product-thumbnail-http.handler"
 
 const productIdParams = {
   type: "object",
@@ -18,10 +16,6 @@ const productBodyProperties = {
 }
 
 const router: FastifyPluginAsync = async (fastify): Promise<void> => {
-  await fastify.register(multipart, {
-    limits: { fileSize: 500_000, files: 1, parts: 1 },
-  })
-
   fastify.get("/products", productHandler.list)
 
   fastify.get<{ Params: { id: string } }>(
@@ -73,22 +67,6 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
       },
     },
     productHandler.update,
-  )
-
-  fastify.put<{ Params: { id: string } }>(
-    "/products/:id/thumbnail",
-    {
-      schema: { params: productIdParams },
-    },
-    productThumbnailHandler.upload,
-  )
-
-  fastify.delete<{ Params: { id: string } }>(
-    "/products/:id/thumbnail",
-    {
-      schema: { params: productIdParams },
-    },
-    productThumbnailHandler.remove,
   )
 
   fastify.delete<{ Params: { id: string } }>(

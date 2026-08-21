@@ -7,10 +7,7 @@ import { products } from "./schema"
 export class ProductRepository {
   async findAll(): Promise<Product[]> {
     const records = await getDrizzleDB().select().from(products).orderBy(products.id)
-    return records.map(
-      (record) =>
-        new Product(record.id, record.name, record.description, record.thumbnailReference),
-    )
+    return records.map((record) => new Product(record.id, record.name, record.description))
   }
 
   async findById(id: number): Promise<Product | null> {
@@ -21,12 +18,12 @@ export class ProductRepository {
       .limit(1)
     if (!record) return null
 
-    return new Product(record.id, record.name, record.description, record.thumbnailReference)
+    return new Product(record.id, record.name, record.description)
   }
 
   async create(product: CreateProduct): Promise<Product> {
     const [record] = await getDrizzleDB().insert(products).values(product).returning()
-    return new Product(record.id, record.name, record.description, null)
+    return new Product(record.id, record.name, record.description)
   }
 
   async update(id: number, product: UpdateProduct): Promise<Product | null> {
@@ -37,17 +34,7 @@ export class ProductRepository {
       .returning()
     if (!record) return null
 
-    return new Product(record.id, record.name, record.description, record.thumbnailReference)
-  }
-
-  async setThumbnail(product: Product): Promise<void> {
-    await getDrizzleDB()
-      .update(products)
-      .set({
-        thumbnailReference: product.thumbnail,
-        updatedAt: new Date(),
-      })
-      .where(eq(products.id, product.id))
+    return new Product(record.id, record.name, record.description)
   }
 
   async delete(id: number): Promise<boolean> {

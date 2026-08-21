@@ -1,9 +1,9 @@
 import { variantRepository } from "../../infrastructure/persistence/variants/variant.repository"
 
-export class DeleteProductVariantSelectionUseCase {
+export class DeleteVariantSelectionUseCase {
   async execute(variantId: number, optionId: number): Promise<void> {
     await variantRepository.deleteSelection(variantId, optionId)
   }
 }
 
-export const deleteProductVariantSelectionUseCase = new DeleteProductVariantSelectionUseCase()
+export const deleteVariantSelectionUseCase = new DeleteVariantSelectionUseCase()

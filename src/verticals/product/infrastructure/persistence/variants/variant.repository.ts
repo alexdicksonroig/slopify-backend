@@ -4,18 +4,12 @@ import { ProductOption } from "../../../domain/options/product-option.entity"
 import { ProductOptionValue } from "../../../domain/options/product-option-value.entity"
 import { Product } from "../../../domain/product.entity"
 import {
-  ProductVariant,
-  ProductVariantWithProduct,
+  Variant,
+  VariantWithProduct,
   type ProductOptionSelection,
   type VariantInList,
-} from "../../../domain/variants/product-variant.entity"
-import {
-  productOptionValues,
-  productOptions,
-  products,
-  productVariants,
-  selectedOptions,
-} from "../schema"
+} from "../../../domain/variants/variant.entity"
+import { productOptionValues, productOptions, products, variants, selectedOptions } from "../schema"
 
 class VariantRepository {
   async findAll(filters: { optionId: number; valueId: number }[]): Promise<VariantInList[]> {
@@ -28,59 +22,55 @@ class VariantRepository {
     )
     const variantIds = filterConditions.length
       ? database
-          .select({ variantId: selectedOptions.productVariantId })
+          .select({ variantId: selectedOptions.variantId })
           .from(selectedOptions)
           .where(or(...filterConditions))
-          .groupBy(selectedOptions.productVariantId)
+          .groupBy(selectedOptions.variantId)
           .having(eq(countDistinct(selectedOptions.productOptionId), filters.length))
       : undefined
 
-    const variants = await database
+    const variantRecords = await database
       .select({
-        id: productVariants.id,
+        id: variants.id,
         productId: products.id,
-        unitAmount: productVariants.unitAmount,
-        currency: productVariants.currency,
+        unitAmount: variants.unitAmount,
+        currency: variants.currency,
         productName: products.name,
         productDescription: products.description,
-        productThumbnailReference: products.thumbnailReference,
+        thumbnailReference: variants.thumbnailReference,
       })
-      .from(productVariants)
-      .innerJoin(products, eq(products.id, productVariants.productId))
-      .where(variantIds ? inArray(productVariants.id, variantIds) : undefined)
-      .orderBy(productVariants.id)
+      .from(variants)
+      .innerJoin(products, eq(products.id, variants.productId))
+      .where(variantIds ? inArray(variants.id, variantIds) : undefined)
+      .orderBy(variants.id)
 
-    const variantsInList = variants.map((variant) => ({
+    const variantsInList = variantRecords.map((variant) => ({
       id: variant.id,
       unitAmount: variant.unitAmount,
       currency: variant.currency,
-      product: new Product(
-        variant.productId,
-        variant.productName,
-        variant.productDescription,
-        variant.productThumbnailReference,
-      ),
+      thumbnail: variant.thumbnailReference,
+      product: new Product(variant.productId, variant.productName, variant.productDescription),
     }))
 
     return variantsInList
   }
 
   // TODO: Refactor/cleanup
-  async findById(id: number): Promise<ProductVariantWithProduct | null> {
+  async findById(id: number): Promise<VariantWithProduct | null> {
     const database = getDrizzleDB()
     const [variant] = await database
       .select({
-        id: productVariants.id,
+        id: variants.id,
         productId: products.id,
-        unitAmount: productVariants.unitAmount,
-        currency: productVariants.currency,
+        unitAmount: variants.unitAmount,
+        currency: variants.currency,
         productName: products.name,
         productDescription: products.description,
-        productThumbnailReference: products.thumbnailReference,
+        thumbnailReference: variants.thumbnailReference,
       })
-      .from(productVariants)
-      .innerJoin(products, eq(products.id, productVariants.productId))
-      .where(eq(productVariants.id, id))
+      .from(variants)
+      .innerJoin(products, eq(products.id, variants.productId))
+      .where(eq(variants.id, id))
       .limit(1)
 
     if (!variant) return null
@@ -98,10 +88,10 @@ class VariantRepository {
         productOptionValues,
         eq(productOptionValues.id, selectedOptions.productOptionValueId),
       )
-      .where(eq(selectedOptions.productVariantId, id))
+      .where(eq(selectedOptions.variantId, id))
       .orderBy(productOptions.id)
 
-    return new ProductVariantWithProduct(
+    return new VariantWithProduct(
       variant.id,
       variant.productId,
       variant.unitAmount,
@@ -110,28 +100,24 @@ class VariantRepository {
         option: new ProductOption(record.optionId, [], record.optionLabel),
         value: new ProductOptionValue(record.valueId, record.valueLabel),
       })),
-      new Product(
-        variant.productId,
-        variant.productName,
-        variant.productDescription,
-        variant.productThumbnailReference,
-      ),
+      variant.thumbnailReference,
+      new Product(variant.productId, variant.productName, variant.productDescription),
     )
   }
 
-  async findForProduct(productId: number): Promise<ProductVariant[]> {
+  async findForProduct(productId: number): Promise<Variant[]> {
     const database = getDrizzleDB()
-    const variants = await database
+    const variantRecords = await database
       .select()
-      .from(productVariants)
-      .where(eq(productVariants.productId, productId))
-      .orderBy(productVariants.id)
+      .from(variants)
+      .where(eq(variants.productId, productId))
+      .orderBy(variants.id)
 
-    if (variants.length === 0) return []
+    if (variantRecords.length === 0) return []
 
     const records = await database
       .select({
-        variantId: selectedOptions.productVariantId,
+        variantId: selectedOptions.variantId,
         optionId: productOptions.id,
         optionLabel: productOptions.label,
         valueId: productOptionValues.id,
@@ -145,11 +131,11 @@ class VariantRepository {
       )
       .where(
         inArray(
-          selectedOptions.productVariantId,
-          variants.map((variant) => variant.id),
+          selectedOptions.variantId,
+          variantRecords.map((variant) => variant.id),
         ),
       )
-      .orderBy(selectedOptions.productVariantId, productOptions.id)
+      .orderBy(selectedOptions.variantId, productOptions.id)
 
     const selectionsByVariant = new Map<number, ProductOptionSelection[]>()
     for (const record of records) {
@@ -161,51 +147,55 @@ class VariantRepository {
       selectionsByVariant.set(record.variantId, selections)
     }
 
-    return variants.map(
+    return variantRecords.map(
       (variant) =>
-        new ProductVariant(
+        new Variant(
           variant.id,
           variant.productId,
           variant.unitAmount,
           variant.currency,
           selectionsByVariant.get(variant.id) ?? [],
+          variant.thumbnailReference,
         ),
     )
   }
 
-  async createVariant(
-    productId: number,
-    unitAmount: number,
-    currency: string,
-  ): Promise<ProductVariant> {
+  async createVariant(productId: number, unitAmount: number, currency: string): Promise<Variant> {
     const [record] = await getDrizzleDB()
-      .insert(productVariants)
+      .insert(variants)
       .values({ productId, unitAmount, currency })
-      .returning({ id: productVariants.id })
+      .returning({ id: variants.id })
 
-    return new ProductVariant(record.id, productId, unitAmount, currency, [])
+    return new Variant(record.id, productId, unitAmount, currency, [], null)
+  }
+
+  async setThumbnail(variant: Variant): Promise<void> {
+    await getDrizzleDB()
+      .update(variants)
+      .set({ thumbnailReference: variant.thumbnail })
+      .where(eq(variants.id, variant.id))
   }
 
   async delete(id: number): Promise<boolean> {
     const [record] = await getDrizzleDB()
-      .delete(productVariants)
-      .where(eq(productVariants.id, id))
-      .returning({ id: productVariants.id })
+      .delete(variants)
+      .where(eq(variants.id, id))
+      .returning({ id: variants.id })
     return Boolean(record)
   }
 
   async addSelection(variantId: number, optionId: number, valueId: number): Promise<void> {
     const database = getDrizzleDB()
     const [variant] = await database
-      .select({ productId: productVariants.productId })
-      .from(productVariants)
-      .where(eq(productVariants.id, variantId))
+      .select({ productId: variants.productId })
+      .from(variants)
+      .where(eq(variants.id, variantId))
       .limit(1)
-    if (!variant) throw new Error("Product variant not found")
+    if (!variant) throw new Error("Variant not found")
 
     await database.insert(selectedOptions).values({
       productId: variant.productId,
-      productVariantId: variantId,
+      variantId: variantId,
       productOptionId: optionId,
       productOptionValueId: valueId,
     })
@@ -216,7 +206,7 @@ class VariantRepository {
       .delete(selectedOptions)
       .where(
         and(
-          eq(selectedOptions.productVariantId, variantId),
+          eq(selectedOptions.variantId, variantId),
           eq(selectedOptions.productOptionId, optionId),
         ),
       )
