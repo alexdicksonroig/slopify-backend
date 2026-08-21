@@ -1,5 +1,5 @@
 import { getDrizzleDB } from "@database"
-import { eq } from "drizzle-orm"
+import { desc, eq } from "drizzle-orm"
 import { Order, type OrderStatus } from "../../domain/order.entity"
 import { orderItems, orders } from "./schema"
 
@@ -33,6 +33,51 @@ export class OrderRepository {
         record.createdAt,
       )
     })
+  }
+
+  async findAll(): Promise<Order[]> {
+    const database = getDrizzleDB()
+    const orderRecords = await database.select().from(orders).orderBy(desc(orders.createdAt))
+    const itemRecords = await database.select().from(orderItems)
+
+    return orderRecords.map(
+      (record) =>
+        new Order(
+          record.id,
+          itemRecords
+            .filter((item) => item.orderId === record.id)
+            .map((item) => ({
+              variantId: item.variantId,
+              quantity: item.quantity,
+              productName: item.productName,
+              unitAmount: item.unitAmount,
+              currency: item.currency,
+            })),
+          record.checkoutSessionId,
+          record.status as OrderStatus,
+          record.createdAt,
+        ),
+    )
+  }
+
+  async findById(id: number): Promise<Order | null> {
+    const [record] = await getDrizzleDB().select().from(orders).where(eq(orders.id, id)).limit(1)
+    if (!record) return null
+
+    const items = await getDrizzleDB().select().from(orderItems).where(eq(orderItems.orderId, id))
+    return new Order(
+      record.id,
+      items.map((item) => ({
+        variantId: item.variantId,
+        quantity: item.quantity,
+        productName: item.productName,
+        unitAmount: item.unitAmount,
+        currency: item.currency,
+      })),
+      record.checkoutSessionId,
+      record.status as OrderStatus,
+      record.createdAt,
+    )
   }
 
   async setCheckoutSessionId(orderId: number, checkoutSessionId: string): Promise<void> {
