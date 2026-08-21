@@ -16,14 +16,10 @@ class VariantHandler {
 
     return variants.map((variant) => ({
       id: variant.id,
+      productId: variant.productId,
       unitAmount: variant.unitAmount,
       currency: variant.currency,
       thumbnailUrl: variant.thumbnail ? r2Adapter.publicUrl(variant.thumbnail) : null,
-      product: {
-        id: variant.product.id,
-        name: variant.product.name,
-        description: variant.product.description,
-      },
     }))
   }
 
@@ -38,11 +34,6 @@ class VariantHandler {
       currency: variant.currency,
       selections: variant.selections,
       thumbnailUrl: variant.thumbnail ? r2Adapter.publicUrl(variant.thumbnail) : null,
-      product: {
-        id: variant.product.id,
-        name: variant.product.name,
-        description: variant.product.description,
-      },
     }
   }
 
