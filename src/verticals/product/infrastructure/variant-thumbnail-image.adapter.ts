@@ -1,7 +1,7 @@
 import sharp from "sharp"
 
 const THUMBNAIL_SIZE = 250
-const DEFAULT_QUALITY = 80
+const DEFAULT_QUALITY = 95
 
 export const variantThumbnailImageAdapter = {
   convertToWebp: async (originalBuffer: Buffer): Promise<Buffer> => {
