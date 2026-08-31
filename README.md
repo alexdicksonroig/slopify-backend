@@ -33,6 +33,12 @@ stripe listen --forward-to localhost:3000/stripe/webhook
 
 Use the webhook signing secret printed by the Stripe CLI as `STRIPE_WEBHOOK_SECRET`.
 
+## Storefront deployment
+
+Create a Deploy Hook in the Vercel frontend project and set its URL as
+`VERCEL_DEPLOY_HOOK_URL` in the backend environment. The **Save** button in the admin header
+triggers this hook, causing Vercel to redeploy the frontend using its configured build command.
+
 ## Database and migrations
 
 Start the local PostgreSQL database with Docker Compose:

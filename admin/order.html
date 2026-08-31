@@ -49,6 +49,19 @@
         font-size: 1.15rem;
         font-weight: 700;
       }
+      .deploy-button {
+        margin-left: auto;
+        border: 1px solid #516173;
+        border-radius: 5px;
+        padding: 0.35rem 0.6rem;
+        color: white;
+        background: transparent;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+      .deploy-button:hover:not(:disabled) {
+        background: var(--navy-light);
+      }
       .brand-mark {
         display: grid;
         place-items: center;
@@ -304,6 +317,13 @@
       <aside class="sidebar">
         <div class="brand">
           <span class="brand-mark">S</span><span class="brand-name">Shop Admin</span>
+          <button
+            class="deploy-button"
+            type="button"
+            onclick="fetch('/admin/deploy', { method: 'POST' })"
+          >
+            Save
+          </button>
         </div>
         <div class="nav-label">Catalog</div>
         <a class="nav-item" href="/admin/"
