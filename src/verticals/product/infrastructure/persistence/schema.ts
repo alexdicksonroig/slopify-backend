@@ -27,6 +27,7 @@ export const variants = pgTable("variants", {
   unitAmount: integer("unit_amount"),
   currency: text("currency"),
   thumbnailReference: text("thumbnail_reference"),
+  coverReference: text("cover_reference"),
 })
 
 export const selectedOptions = pgTable(

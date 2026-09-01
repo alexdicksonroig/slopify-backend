@@ -442,16 +442,16 @@
         text-overflow: ellipsis;
         white-space: nowrap;
       }
-      .variant-thumbnail-control {
+      .variant-image-control {
         display: grid;
         gap: 0.65rem;
       }
-      .thumbnail-preview {
+      .image-preview {
         display: flex;
         align-items: center;
         gap: 0.8rem;
       }
-      .thumbnail-preview img {
+      .image-preview img {
         width: 88px;
         height: 88px;
         border: 1px solid var(--border);
@@ -659,7 +659,7 @@
         .variant-row span {
           white-space: normal;
         }
-        .thumbnail-preview {
+        .image-preview {
           align-items: flex-start;
           flex-direction: column;
         }
@@ -832,8 +832,12 @@
           toast.hidden = true
         }, 2800)
       }
+      const imageKinds = ["thumbnail", "cover"]
+      const imageLabel = (kind) => kind[0].toUpperCase() + kind.slice(1)
+      const variantImageHtml = (kind, url) =>
+        `<div class="variant-row variant-image-row"><span>${imageLabel(kind)}</span><div class="variant-image-control"><input data-variant-image="${kind}" type="file" accept="image/jpeg,image/png,image/webp"><div class="image-preview" data-variant-image-preview="${kind}"${url ? "" : " hidden"}><img data-variant-image-preview-img="${kind}" alt="Variant ${kind} preview"${url ? ` src="${escapeHtml(url)}"` : ""}><button class="btn btn-danger" data-action="remove-image" data-image-kind="${kind}" type="button">Remove ${kind}</button></div></div></div>`
       const variantHtml = (variant = { unitAmount: "", currency: "", selections: [] }) =>
-        `<div class="variant-card"${variant.id ? ` data-variant-id="${variant.id}"` : ""} data-has-thumbnail="${Boolean(variant.thumbnailUrl)}"><div class="variant-card-header"><label>Amount (minor units) <input data-variant-unit-amount type="number" min="1" step="1" required value="${escapeHtml(variant.unitAmount)}"></label><label>Currency <input data-variant-currency required minlength="3" maxlength="3" value="${escapeHtml(variant.currency)}"></label><button class="btn btn-danger" data-action="remove-variant" type="button">Remove</button></div><div class="variant-row variant-thumbnail-row"><span>Thumbnail</span><div class="variant-thumbnail-control"><input data-variant-thumbnail type="file" accept="image/jpeg,image/png,image/webp"><div class="thumbnail-preview" data-variant-thumbnail-preview${variant.thumbnailUrl ? "" : " hidden"}><img data-variant-thumbnail-image alt="Variant thumbnail preview"${variant.thumbnailUrl ? ` src="${escapeHtml(variant.thumbnailUrl)}"` : ""}><button class="btn btn-danger" data-action="remove-thumbnail" type="button">Remove thumbnail</button></div></div></div>${productOptions
+        `<div class="variant-card"${variant.id ? ` data-variant-id="${variant.id}"` : ""} data-has-thumbnail="${Boolean(variant.thumbnailUrl)}" data-has-cover="${Boolean(variant.coverUrl)}"><div class="variant-card-header"><label>Amount (minor units) <input data-variant-unit-amount type="number" min="1" step="1" required value="${escapeHtml(variant.unitAmount)}"></label><label>Currency <input data-variant-currency required minlength="3" maxlength="3" value="${escapeHtml(variant.currency)}"></label><button class="btn btn-danger" data-action="remove-variant" type="button">Remove</button></div>${variantImageHtml("thumbnail", variant.thumbnailUrl)}${variantImageHtml("cover", variant.coverUrl)}${productOptions
           .map((option) => {
             const selection = variant.selections.find((item) => item.option.id === option.id)
             return `<label class="variant-row"><span>${escapeHtml(option.label)}</span><select data-option-id="${option.id}"><option value="">Not used</option>${option.possibleValues.map((value) => `<option value="${value.id}"${selection?.value.id === value.id ? " selected" : ""}>${escapeHtml(value.label)}</option>`).join("")}</select></label>`
@@ -935,8 +939,15 @@
           id: variant.dataset.variantId ? Number(variant.dataset.variantId) : null,
           unitAmount: Number(variant.querySelector("[data-variant-unit-amount]").value),
           currency: variant.querySelector("[data-variant-currency]").value,
-          thumbnail: variant.querySelector("[data-variant-thumbnail]").files[0],
-          removeThumbnail: variant.dataset.removeThumbnail === "true",
+          images: Object.fromEntries(
+            imageKinds.map((kind) => [
+              kind,
+              {
+                file: variant.querySelector(`[data-variant-image="${kind}"]`).files[0],
+                remove: variant.dataset[`remove${imageLabel(kind)}`] === "true",
+              },
+            ]),
+          ),
           selections: [...variant.querySelectorAll("select[data-option-id]")]
             .filter((select) => select.value)
             .map((select) => ({
@@ -998,19 +1009,22 @@
               })
               if (!addResponse.ok) throw new Error()
             }
-            if (variant.thumbnail) {
-              const thumbnailBody = new FormData()
-              thumbnailBody.append("thumbnail", variant.thumbnail)
-              const thumbnailResponse = await fetch(`/variants/${variantId}/thumbnail`, {
-                method: "PUT",
-                body: thumbnailBody,
-              })
-              if (!thumbnailResponse.ok) throw new Error()
-            } else if (variant.removeThumbnail) {
-              const thumbnailResponse = await fetch(`/variants/${variantId}/thumbnail`, {
-                method: "DELETE",
-              })
-              if (!thumbnailResponse.ok) throw new Error()
+            for (const kind of imageKinds) {
+              const image = variant.images[kind]
+              if (image.file) {
+                const imageBody = new FormData()
+                imageBody.append(kind, image.file)
+                const imageResponse = await fetch(`/variants/${variantId}/${kind}`, {
+                  method: "PUT",
+                  body: imageBody,
+                })
+                if (!imageResponse.ok) throw new Error()
+              } else if (image.remove) {
+                const imageResponse = await fetch(`/variants/${variantId}/${kind}`, {
+                  method: "DELETE",
+                })
+                if (!imageResponse.ok) throw new Error()
+              }
             }
           }
         } catch {
@@ -1034,11 +1048,14 @@
         if (button.dataset.action === "remove-variant") {
           button.closest(".variant-card").remove()
         }
-        if (button.dataset.action === "remove-thumbnail") {
+        if (button.dataset.action === "remove-image") {
           const card = button.closest(".variant-card")
-          card.querySelector("[data-variant-thumbnail]").value = ""
-          card.dataset.removeThumbnail = String(card.dataset.hasThumbnail === "true")
-          card.querySelector("[data-variant-thumbnail-preview]").hidden = true
+          const kind = button.dataset.imageKind
+          card.querySelector(`[data-variant-image="${kind}"]`).value = ""
+          card.dataset[`remove${imageLabel(kind)}`] = String(
+            card.dataset[`has${imageLabel(kind)}`] === "true",
+          )
+          card.querySelector(`[data-variant-image-preview="${kind}"]`).hidden = true
         }
         if (button.dataset.action === "add-variant") {
           const firstVariant = variants.querySelector(".variant-card")
@@ -1075,18 +1092,20 @@
       })
 
       variants.addEventListener("change", (event) => {
-        const input = event.target.closest("[data-variant-thumbnail]")
+        const input = event.target.closest("[data-variant-image]")
         if (!input) return
         const file = input.files[0]
         if (!file) return
-        if (file.size > 500000) {
+        if (file.size > 5000000) {
           input.value = ""
-          return showError("A variant thumbnail must not exceed 500 KB.")
+          return showError("A variant image must not exceed 5 MB.")
         }
         const card = input.closest(".variant-card")
-        card.dataset.removeThumbnail = "false"
-        const preview = card.querySelector("[data-variant-thumbnail-preview]")
-        preview.querySelector("[data-variant-thumbnail-image]").src = URL.createObjectURL(file)
+        const kind = input.dataset.variantImage
+        card.dataset[`remove${imageLabel(kind)}`] = "false"
+        const preview = card.querySelector(`[data-variant-image-preview="${kind}"]`)
+        preview.querySelector(`[data-variant-image-preview-img="${kind}"]`).src =
+          URL.createObjectURL(file)
         preview.hidden = false
       })
 

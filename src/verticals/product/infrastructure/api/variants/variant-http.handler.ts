@@ -20,6 +20,7 @@ class VariantHandler {
       unitAmount: variant.unitAmount,
       currency: variant.currency,
       thumbnailUrl: variant.thumbnail ? r2Adapter.publicUrl(variant.thumbnail) : null,
+      coverUrl: variant.cover ? r2Adapter.publicUrl(variant.cover) : null,
     }))
   }
 
@@ -34,6 +35,7 @@ class VariantHandler {
       currency: variant.currency,
       selections: variant.selections,
       thumbnailUrl: variant.thumbnail ? r2Adapter.publicUrl(variant.thumbnail) : null,
+      coverUrl: variant.cover ? r2Adapter.publicUrl(variant.cover) : null,
     }
   }
 
@@ -47,6 +49,7 @@ class VariantHandler {
       currency: variant.currency,
       selections: variant.selections,
       thumbnailUrl: variant.thumbnail ? r2Adapter.publicUrl(variant.thumbnail) : null,
+      coverUrl: variant.cover ? r2Adapter.publicUrl(variant.cover) : null,
     }))
   }
 

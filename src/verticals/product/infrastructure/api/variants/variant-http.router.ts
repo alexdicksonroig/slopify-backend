@@ -1,7 +1,7 @@
 import multipart from "@fastify/multipart"
 import { type FastifyPluginAsync } from "fastify"
 import { variantHandler } from "./variant-http.handler"
-import { variantThumbnailHandler } from "./variant-thumbnail-http.handler"
+import { variantImageHandler } from "./variant-image-http.handler"
 
 const positiveId = { type: "string", pattern: "^[1-9][0-9]*$" }
 
@@ -31,7 +31,7 @@ const selectionParams = {
 
 const router: FastifyPluginAsync = async (fastify): Promise<void> => {
   await fastify.register(multipart, {
-    limits: { fileSize: 500_000, files: 1, parts: 1 },
+    limits: { fileSize: 5_000_000, files: 1, parts: 1 },
   })
 
   fastify.get<{ Querystring: Record<string, string> }>(
@@ -89,13 +89,25 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
   fastify.put<{ Params: { variantId: string } }>(
     "/variants/:variantId/thumbnail",
     { schema: { params: variantIdParams } },
-    variantThumbnailHandler.upload,
+    variantImageHandler.uploadThumbnail,
   )
 
   fastify.delete<{ Params: { variantId: string } }>(
     "/variants/:variantId/thumbnail",
     { schema: { params: variantIdParams } },
-    variantThumbnailHandler.remove,
+    variantImageHandler.removeThumbnail,
+  )
+
+  fastify.put<{ Params: { variantId: string } }>(
+    "/variants/:variantId/cover",
+    { schema: { params: variantIdParams } },
+    variantImageHandler.uploadCover,
+  )
+
+  fastify.delete<{ Params: { variantId: string } }>(
+    "/variants/:variantId/cover",
+    { schema: { params: variantIdParams } },
+    variantImageHandler.removeCover,
   )
 
   fastify.delete<{ Params: { variantId: string } }>(

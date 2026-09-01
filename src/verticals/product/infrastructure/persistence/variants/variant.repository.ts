@@ -38,6 +38,7 @@ class VariantRepository {
           record.currency,
           [],
           record.thumbnailReference,
+          record.coverReference,
         ),
     )
   }
@@ -74,6 +75,7 @@ class VariantRepository {
         value: new ProductOptionValue(record.valueId, record.valueLabel),
       })),
       variant.thumbnailReference,
+      variant.coverReference,
     )
   }
 
@@ -128,6 +130,7 @@ class VariantRepository {
           variant.currency,
           selectionsByVariant.get(variant.id) ?? [],
           variant.thumbnailReference,
+          variant.coverReference,
         ),
     )
   }
@@ -138,13 +141,20 @@ class VariantRepository {
       .values({ productId, unitAmount, currency })
       .returning({ id: variants.id })
 
-    return new Variant(record.id, productId, unitAmount, currency, [], null)
+    return new Variant(record.id, productId, unitAmount, currency, [], null, null)
   }
 
   async setThumbnail(variant: Variant): Promise<void> {
     await getDrizzleDB()
       .update(variants)
       .set({ thumbnailReference: variant.thumbnail })
+      .where(eq(variants.id, variant.id))
+  }
+
+  async setCover(variant: Variant): Promise<void> {
+    await getDrizzleDB()
+      .update(variants)
+      .set({ coverReference: variant.cover })
       .where(eq(variants.id, variant.id))
   }
 

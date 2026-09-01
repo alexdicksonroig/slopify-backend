@@ -8,6 +8,7 @@ export type ProductOptionSelection = {
 
 export class Variant {
   thumbnail: string | null
+  cover: string | null
 
   constructor(
     readonly id: number,
@@ -16,8 +17,10 @@ export class Variant {
     readonly currency: string | null,
     readonly selections: ProductOptionSelection[],
     thumbnailReference: string | null,
+    coverReference: string | null,
   ) {
     this.thumbnail = thumbnailReference
+    this.cover = coverReference
   }
 
   replaceThumbnail(reference: string): void {
@@ -26,5 +29,13 @@ export class Variant {
 
   removeThumbnail(): void {
     this.thumbnail = null
+  }
+
+  replaceCover(reference: string): void {
+    this.cover = reference
+  }
+
+  removeCover(): void {
+    this.cover = null
   }
 }
