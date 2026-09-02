@@ -65,7 +65,7 @@ class VariantImageHandler {
 
     const image = await this.readImage(request, reply)
     if (!Buffer.isBuffer(image)) return image
-    const webpImage = await variantImageAdapter.convertToWebp(image, 1200)
+    const webpImage = await variantImageAdapter.convertToWebp(image, 1200, 675)
     await new UpdateVariantCoverUseCase().execute(variant, webpImage)
 
     return {
