@@ -23,7 +23,9 @@ export const productOptionValues = pgTable("product_option_values", {
 
 export const variants = pgTable("variants", {
   id: serial("id").primaryKey(),
-  productId: integer("product_id").notNull(),
+  productId: integer("product_id")
+    .notNull()
+    .references(() => products.id, { onDelete: "cascade" }),
   unitAmount: integer("unit_amount"),
   currency: text("currency"),
   thumbnailReference: text("thumbnail_reference"),
