@@ -6,6 +6,7 @@ import { deleteVariantUseCase } from "../../../application/variants/delete-varia
 import { getVariantUseCase } from "../../../application/variants/get-variant.use-case"
 import { listAllVariantsUseCase } from "../../../application/variants/list-all-variants.use-case"
 import { listVariantsUseCase } from "../../../application/variants/list-variants.use-case"
+import { updateVariantStockUseCase } from "../../../application/variants/update-variant-stock.use-case"
 import { type Variant } from "../../../domain/variants/variant.entity"
 import { r2Adapter } from "../../r2.adapter"
 import { parseVariantFilters } from "../../variant-filter-query.adapter"
@@ -19,6 +20,7 @@ class VariantHandler {
       productId: variant.productId,
       unitAmount: variant.unitAmount,
       currency: variant.currency,
+      stock: variant.stock,
       thumbnailUrl: variant.thumbnail ? r2Adapter.publicUrl(variant.thumbnail) : null,
       coverUrl: variant.cover ? r2Adapter.publicUrl(variant.cover) : null,
     }))
@@ -33,6 +35,7 @@ class VariantHandler {
       productId: variant.productId,
       unitAmount: variant.unitAmount,
       currency: variant.currency,
+      stock: variant.stock,
       selections: variant.selections,
       thumbnailUrl: variant.thumbnail ? r2Adapter.publicUrl(variant.thumbnail) : null,
       coverUrl: variant.cover ? r2Adapter.publicUrl(variant.cover) : null,
@@ -47,6 +50,7 @@ class VariantHandler {
       productId: variant.productId,
       unitAmount: variant.unitAmount,
       currency: variant.currency,
+      stock: variant.stock,
       selections: variant.selections,
       thumbnailUrl: variant.thumbnail ? r2Adapter.publicUrl(variant.thumbnail) : null,
       coverUrl: variant.cover ? r2Adapter.publicUrl(variant.cover) : null,
@@ -56,7 +60,7 @@ class VariantHandler {
   create = async (
     request: FastifyRequest<{
       Params: { productId: string }
-      Body: { unitAmount: number; currency: string }
+      Body: { unitAmount: number; currency: string; stock: number }
     }>,
     reply: FastifyReply,
   ): Promise<Variant> => {
@@ -64,8 +68,23 @@ class VariantHandler {
       Number(request.params.productId),
       request.body.unitAmount,
       request.body.currency.toLowerCase(),
+      request.body.stock,
     )
     return await reply.code(201).send(variant)
+  }
+
+  updateStock = async (
+    request: FastifyRequest<{
+      Params: { variantId: string }
+      Body: { stock: number }
+    }>,
+    reply: FastifyReply,
+  ) => {
+    const variant = await getVariantUseCase.execute(Number(request.params.variantId))
+    if (!variant) return await reply.code(404).send({ message: "Variant not found" })
+
+    await updateVariantStockUseCase.execute(variant, request.body.stock)
+    return { id: variant.id, stock: variant.stock }
   }
 
   delete = async (

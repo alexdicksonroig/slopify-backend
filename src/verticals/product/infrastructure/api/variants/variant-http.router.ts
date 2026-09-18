@@ -66,7 +66,7 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
 
   fastify.post<{
     Params: { productId: string }
-    Body: { unitAmount: number; currency: string }
+    Body: { unitAmount: number; currency: string; stock: number }
   }>(
     "/products/:productId/variants",
     {
@@ -74,16 +74,36 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
         params: productIdParams,
         body: {
           type: "object",
-          required: ["unitAmount", "currency"],
+          required: ["unitAmount", "currency", "stock"],
           additionalProperties: false,
           properties: {
             unitAmount: { type: "integer", minimum: 1 },
             currency: { type: "string", pattern: "^[A-Za-z]{3}$" },
+            stock: { type: "integer", minimum: 0 },
           },
         },
       },
     },
     variantHandler.create,
+  )
+
+  fastify.patch<{
+    Params: { variantId: string }
+    Body: { stock: number }
+  }>(
+    "/variants/:variantId/stock",
+    {
+      schema: {
+        params: variantIdParams,
+        body: {
+          type: "object",
+          required: ["stock"],
+          additionalProperties: false,
+          properties: { stock: { type: "integer", minimum: 0 } },
+        },
+      },
+    },
+    variantHandler.updateStock,
   )
 
   fastify.put<{ Params: { variantId: string } }>(

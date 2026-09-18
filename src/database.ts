@@ -1,7 +1,11 @@
-import { drizzle } from "drizzle-orm/postgres-js"
+import { drizzle, type PostgresJsTransaction } from "drizzle-orm/postgres-js"
 import postgres, { type Sql } from "postgres"
 
 export type Database = ReturnType<typeof drizzle>
+export type DatabaseTransaction = PostgresJsTransaction<
+  Record<string, unknown>,
+  Record<string, never>
+>
 
 let client: Sql | null = null
 let db: Database | null = null

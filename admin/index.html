@@ -427,7 +427,7 @@
       }
       .variant-card-header {
         display: grid;
-        grid-template-columns: 1fr 1fr auto;
+        grid-template-columns: 1fr 1fr 1fr auto;
         align-items: end;
         gap: 0.65rem;
       }
@@ -836,8 +836,8 @@
       const imageLabel = (kind) => kind[0].toUpperCase() + kind.slice(1)
       const variantImageHtml = (kind, url) =>
         `<div class="variant-row variant-image-row"><span>${imageLabel(kind)}</span><div class="variant-image-control"><input data-variant-image="${kind}" type="file" accept="image/jpeg,image/png,image/webp"><div class="image-preview" data-variant-image-preview="${kind}"${url ? "" : " hidden"}><img data-variant-image-preview-img="${kind}" alt="Variant ${kind} preview"${url ? ` src="${escapeHtml(url)}"` : ""}><button class="btn btn-danger" data-action="remove-image" data-image-kind="${kind}" type="button">Remove ${kind}</button></div></div></div>`
-      const variantHtml = (variant = { unitAmount: "", currency: "", selections: [] }) =>
-        `<div class="variant-card"${variant.id ? ` data-variant-id="${variant.id}"` : ""} data-has-thumbnail="${Boolean(variant.thumbnailUrl)}" data-has-cover="${Boolean(variant.coverUrl)}"><div class="variant-card-header"><label>Amount (minor units) <input data-variant-unit-amount type="number" min="1" step="1" required value="${escapeHtml(variant.unitAmount)}"></label><label>Currency <input data-variant-currency required minlength="3" maxlength="3" value="${escapeHtml(variant.currency)}"></label><button class="btn btn-danger" data-action="remove-variant" type="button">Remove</button></div>${variantImageHtml("thumbnail", variant.thumbnailUrl)}${variantImageHtml("cover", variant.coverUrl)}${productOptions
+      const variantHtml = (variant = { unitAmount: "", currency: "", stock: 0, selections: [] }) =>
+        `<div class="variant-card"${variant.id ? ` data-variant-id="${variant.id}"` : ""} data-has-thumbnail="${Boolean(variant.thumbnailUrl)}" data-has-cover="${Boolean(variant.coverUrl)}"><div class="variant-card-header"><label>Amount (minor units) <input data-variant-unit-amount type="number" min="1" step="1" required value="${escapeHtml(variant.unitAmount)}"></label><label>Currency <input data-variant-currency required minlength="3" maxlength="3" value="${escapeHtml(variant.currency)}"></label><label>Stock <input data-variant-stock type="number" min="0" step="1" required value="${escapeHtml(variant.stock)}"></label><button class="btn btn-danger" data-action="remove-variant" type="button">Remove</button></div>${variantImageHtml("thumbnail", variant.thumbnailUrl)}${variantImageHtml("cover", variant.coverUrl)}${productOptions
           .map((option) => {
             const selection = variant.selections.find((item) => item.option.id === option.id)
             return `<label class="variant-row"><span>${escapeHtml(option.label)}</span><select data-option-id="${option.id}"><option value="">Not used</option>${option.possibleValues.map((value) => `<option value="${value.id}"${selection?.value.id === value.id ? " selected" : ""}>${escapeHtml(value.label)}</option>`).join("")}</select></label>`
@@ -939,6 +939,7 @@
           id: variant.dataset.variantId ? Number(variant.dataset.variantId) : null,
           unitAmount: Number(variant.querySelector("[data-variant-unit-amount]").value),
           currency: variant.querySelector("[data-variant-currency]").value,
+          stock: Number(variant.querySelector("[data-variant-stock]").value),
           images: Object.fromEntries(
             imageKinds.map((kind) => [
               kind,
@@ -977,10 +978,18 @@
                 body: JSON.stringify({
                   unitAmount: variant.unitAmount,
                   currency: variant.currency,
+                  stock: variant.stock,
                 }),
               })
               if (!createResponse.ok) throw new Error()
               variantId = (await createResponse.json()).id
+            } else {
+              const stockResponse = await fetch(`/variants/${variantId}/stock`, {
+                method: "PATCH",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ stock: variant.stock }),
+              })
+              if (!stockResponse.ok) throw new Error()
             }
 
             const previousSelections = new Map(
@@ -1069,7 +1078,7 @@
             : []
           button.insertAdjacentHTML(
             "beforebegin",
-            variantHtml({ unitAmount: "", currency: "", selections }),
+            variantHtml({ unitAmount: "", currency: "", stock: 0, selections }),
           )
         }
       })

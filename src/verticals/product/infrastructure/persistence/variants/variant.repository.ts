@@ -1,5 +1,5 @@
-import { getDrizzleDB } from "@database"
-import { and, countDistinct, eq, inArray, or } from "drizzle-orm"
+import { getDrizzleDB, type DatabaseTransaction } from "@database"
+import { and, countDistinct, eq, gte, inArray, or, sql } from "drizzle-orm"
 import { ProductOption } from "../../../domain/options/product-option.entity"
 import { ProductOptionValue } from "../../../domain/options/product-option-value.entity"
 import { Variant, type ProductOptionSelection } from "../../../domain/variants/variant.entity"
@@ -36,6 +36,7 @@ class VariantRepository {
           record.productId,
           record.unitAmount,
           record.currency,
+          record.stock,
           [],
           record.thumbnailReference,
           record.coverReference,
@@ -70,6 +71,7 @@ class VariantRepository {
       variant.productId,
       variant.unitAmount,
       variant.currency,
+      variant.stock,
       records.map((record) => ({
         option: new ProductOption(record.optionId, [], record.optionLabel),
         value: new ProductOptionValue(record.valueId, record.valueLabel),
@@ -128,6 +130,7 @@ class VariantRepository {
           variant.productId,
           variant.unitAmount,
           variant.currency,
+          variant.stock,
           selectionsByVariant.get(variant.id) ?? [],
           variant.thumbnailReference,
           variant.coverReference,
@@ -135,13 +138,38 @@ class VariantRepository {
     )
   }
 
-  async createVariant(productId: number, unitAmount: number, currency: string): Promise<Variant> {
+  async createVariant(
+    productId: number,
+    unitAmount: number,
+    currency: string,
+    stock: number,
+  ): Promise<Variant> {
     const [record] = await getDrizzleDB()
       .insert(variants)
-      .values({ productId, unitAmount, currency })
+      .values({ productId, unitAmount, currency, stock })
       .returning({ id: variants.id })
 
-    return new Variant(record.id, productId, unitAmount, currency, [], null, null)
+    return new Variant(record.id, productId, unitAmount, currency, stock, [], null, null)
+  }
+
+  async setStock(variant: Variant): Promise<void> {
+    await getDrizzleDB()
+      .update(variants)
+      .set({ stock: variant.stock })
+      .where(eq(variants.id, variant.id))
+  }
+
+  async decrementStock(
+    variantId: number,
+    quantity: number,
+    transaction: DatabaseTransaction,
+  ): Promise<void> {
+    const [updated] = await transaction
+      .update(variants)
+      .set({ stock: sql`${variants.stock} - ${quantity}` })
+      .where(and(eq(variants.id, variantId), gte(variants.stock, quantity)))
+      .returning({ id: variants.id })
+    if (!updated) throw new Error(`Variant ${variantId} does not have enough stock`)
   }
 
   async setThumbnail(variant: Variant): Promise<void> {

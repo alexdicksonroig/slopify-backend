@@ -1,5 +1,5 @@
-import { getDrizzleDB } from "@database"
-import { desc, eq } from "drizzle-orm"
+import { getDrizzleDB, type Database, type DatabaseTransaction } from "@database"
+import { and, desc, eq } from "drizzle-orm"
 import { Order, type OrderStatus } from "../../domain/order.entity"
 import { orderItems, orders } from "./schema"
 
@@ -60,11 +60,14 @@ export class OrderRepository {
     )
   }
 
-  async findById(id: number): Promise<Order | null> {
-    const [record] = await getDrizzleDB().select().from(orders).where(eq(orders.id, id)).limit(1)
+  async findById(
+    id: number,
+    database: Database | DatabaseTransaction = getDrizzleDB(),
+  ): Promise<Order | null> {
+    const [record] = await database.select().from(orders).where(eq(orders.id, id)).limit(1)
     if (!record) return null
 
-    const items = await getDrizzleDB().select().from(orderItems).where(eq(orderItems.orderId, id))
+    const items = await database.select().from(orderItems).where(eq(orderItems.orderId, id))
     return new Order(
       record.id,
       items.map((item) => ({
@@ -86,6 +89,20 @@ export class OrderRepository {
 
   async setStatus(orderId: number, status: OrderStatus): Promise<void> {
     await getDrizzleDB().update(orders).set({ status }).where(eq(orders.id, orderId))
+  }
+
+  async transitionStatus(
+    orderId: number,
+    from: OrderStatus,
+    to: OrderStatus,
+    database: Database | DatabaseTransaction = getDrizzleDB(),
+  ): Promise<boolean> {
+    const [updated] = await database
+      .update(orders)
+      .set({ status: to })
+      .where(and(eq(orders.id, orderId), eq(orders.status, from)))
+      .returning({ id: orders.id })
+    return Boolean(updated)
   }
 }
 
