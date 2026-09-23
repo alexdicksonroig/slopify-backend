@@ -248,6 +248,15 @@
         min-height: 110px;
         resize: vertical;
       }
+      .localized-field {
+        display: grid;
+        grid-template-columns: minmax(150px, 190px) minmax(0, 1fr);
+        align-items: start;
+        gap: 0.65rem;
+      }
+      .localized-field select {
+        width: 100%;
+      }
       .field-help,
       #status {
         margin: 0;
@@ -499,7 +508,15 @@
               </header>
               <div class="card-body">
                 <label>Name <input id="name" required minlength="1" autocomplete="off" /></label>
-                <label>Description <textarea id="description"></textarea></label>
+                <label for="description">Description</label>
+                <div class="localized-field">
+                  <select
+                    id="description-language"
+                    aria-label="Description language"
+                    disabled
+                  ></select>
+                  <textarea id="description" aria-label="Description translation"></textarea>
+                </div>
               </div>
             </section>
             <section class="card">
@@ -535,14 +552,41 @@
       const submit = document.querySelector("#submit")
       const status = document.querySelector("#status")
       const variantsContainer = document.querySelector("#variants")
+      const descriptionLanguage = document.querySelector("#description-language")
       let productOptions = []
       let loadedVariants = []
       let productDescription = {}
+      let languages = []
 
-      const localizedText = (value, language = "en") =>
+      const setLanguages = (catalog) => {
+        languages = catalog
+        descriptionLanguage.replaceChildren(
+          ...catalog.map((language) => new Option(language.label, language.code)),
+        )
+        descriptionLanguage.value =
+          catalog.find((language) => language.code === "en-US")?.code ?? catalog[0].code
+        descriptionLanguage.disabled = false
+      }
+      const showDescription = () => {
+        form.description.value =
+          productDescription[descriptionLanguage.value] ??
+          (descriptionLanguage.value === "en-US" ? productDescription.en : "") ??
+          ""
+        form.description.lang = descriptionLanguage.value
+        form.description.dir = "auto"
+      }
+      form.description.addEventListener("input", () => {
+        const value = form.description.value
+        if (descriptionLanguage.value === "en-US") delete productDescription.en
+        if (value.trim()) productDescription[descriptionLanguage.value] = value
+        else delete productDescription[descriptionLanguage.value]
+      })
+      descriptionLanguage.addEventListener("change", showDescription)
+
+      const localizedText = (value, language = "en-US") =>
         typeof value === "string"
           ? value
-          : (value?.[language] ?? Object.values(value ?? {})[0] ?? "")
+          : (value?.[language] ?? value?.en ?? Object.values(value ?? {})[0] ?? "")
       const escapeHtml = (value) =>
         String(value ?? "").replace(
           /[&<>'"]/g,
@@ -573,9 +617,16 @@
           return showStatus("Invalid product ID.")
         try {
           if (isCreating) {
-            const optionsResponse = await fetch("/product-options")
-            if (!optionsResponse.ok) throw new Error()
+            const [optionsResponse, languagesResponse] = await Promise.all([
+              fetch("/product-options"),
+              fetch("/site-settings/languages"),
+            ])
+            if (!optionsResponse.ok || !languagesResponse.ok) throw new Error()
             productOptions = await optionsResponse.json()
+            const catalog = await languagesResponse.json()
+            if (!catalog.length) throw new Error()
+            setLanguages(catalog)
+            showDescription()
             document.querySelector("#breadcrumb-action").textContent = "New"
             document.querySelector("#page-title").textContent = "New product"
             document.querySelector("#subtitle").textContent = "Add a product to your catalog."
@@ -589,18 +640,29 @@
             return
           }
 
-          const [productResponse, optionsResponse, variantsResponse] = await Promise.all([
-            fetch(`/products/${productId}`),
-            fetch("/product-options"),
-            fetch(`/products/${productId}/variants`),
-          ])
-          if (!productResponse.ok || !optionsResponse.ok || !variantsResponse.ok) throw new Error()
+          const [productResponse, optionsResponse, variantsResponse, languagesResponse] =
+            await Promise.all([
+              fetch(`/products/${productId}`),
+              fetch("/product-options"),
+              fetch(`/products/${productId}/variants`),
+              fetch("/site-settings/languages"),
+            ])
+          if (
+            !productResponse.ok ||
+            !optionsResponse.ok ||
+            !variantsResponse.ok ||
+            !languagesResponse.ok
+          )
+            throw new Error()
           const product = await productResponse.json()
+          const catalog = await languagesResponse.json()
+          if (!catalog.length) throw new Error()
           productOptions = await optionsResponse.json()
           loadedVariants = await variantsResponse.json()
           form.name.value = product.name
           productDescription = product.description || {}
-          form.description.value = localizedText(product.description)
+          setLanguages(catalog)
+          showDescription()
           document.querySelector("#page-title").textContent = `Edit ${product.name}`
           document.querySelector("#subtitle").textContent = `Product #${product.id}`
           document.title = `Edit ${product.name} · Shop Admin`
@@ -721,8 +783,10 @@
         status.textContent = ""
         try {
           const description = { ...productDescription }
-          if (form.description.value.trim()) description.en = form.description.value.trim()
-          else delete description.en
+          for (const [code, value] of Object.entries(description)) {
+            if (typeof value === "string" && value.trim()) description[code] = value.trim()
+            else delete description[code]
+          }
           const response = await fetch(isCreating ? "/products" : `/products/${productId}`, {
             method: isCreating ? "POST" : "PATCH",
             headers: { "content-type": "application/json" },

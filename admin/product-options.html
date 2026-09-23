@@ -366,6 +366,20 @@
         min-height: 130px;
         resize: vertical;
       }
+      .localized-field {
+        display: grid;
+        grid-template-columns: minmax(150px, 190px) minmax(0, 1fr);
+        align-items: start;
+        gap: 0.65rem;
+      }
+      .localized-field select {
+        width: 100%;
+        padding: 0.58rem 0.65rem;
+        border: 1px solid #cdd5df;
+        border-radius: 5px;
+        color: var(--text);
+        background: white;
+      }
       .field-help,
       #status {
         margin: 0;
@@ -633,22 +647,29 @@
         </header>
         <form id="option-form">
           <div class="modal-body">
-            <label
-              >Label
-              <input id="label" name="label" required autocomplete="off" placeholder="Color" /><span
-                class="field-help"
-                >Enter the untranslated English label. The frontend will translate it.</span
-              ></label
-            >
-            <label
-              >Possible values
+            <label for="label">Label</label>
+            <div class="localized-field">
+              <select id="label-language" aria-label="Label language" disabled></select>
+              <input
+                id="label"
+                name="label"
+                autocomplete="off"
+                placeholder="Color"
+                aria-label="Label translation"
+              />
+            </div>
+            <label for="possibleValues">Possible values</label>
+            <div class="localized-field">
+              <select id="values-language" aria-label="Possible values language" disabled></select>
               <textarea
                 id="possibleValues"
                 name="possibleValues"
-                required
                 placeholder="Red&#10;Blue&#10;Green"
-              ></textarea
-              ><span class="field-help">Enter one value per line.</span></label
+                aria-label="Possible value translations"
+              ></textarea>
+            </div>
+            <span class="field-help"
+              >Enter one value per line, keeping the same order in each language.</span
             >
             <p id="status" role="alert"></p>
           </div>
@@ -667,13 +688,60 @@
       const search = document.querySelector("#search")
       const resultCount = document.querySelector("#result-count")
       const toast = document.querySelector("#toast")
+      const labelLanguage = document.querySelector("#label-language")
+      const valuesLanguage = document.querySelector("#values-language")
       let productOptions = []
+      let optionLabel = {}
+      let optionValues = []
       let toastTimer
 
-      const localizedText = (value, language = "en") =>
+      const showLabel = () => {
+        form.label.value = optionLabel[labelLanguage.value] ?? ""
+        form.label.lang = labelLanguage.value
+        form.label.dir = "auto"
+      }
+      const showValues = () => {
+        form.possibleValues.value = optionValues
+          .map((value) => value[valuesLanguage.value] ?? "")
+          .join("\n")
+        form.possibleValues.lang = valuesLanguage.value
+        form.possibleValues.dir = "auto"
+      }
+      labelLanguage.addEventListener("change", showLabel)
+      valuesLanguage.addEventListener("change", showValues)
+      form.label.addEventListener("input", () => {
+        if (form.label.value.trim()) optionLabel[labelLanguage.value] = form.label.value
+        else delete optionLabel[labelLanguage.value]
+      })
+      form.possibleValues.addEventListener("input", () => {
+        const lines = form.possibleValues.value.split("\n")
+        for (let index = 0; index < Math.max(lines.length, optionValues.length); index++) {
+          optionValues[index] ??= {}
+          if (lines[index]?.trim()) optionValues[index][valuesLanguage.value] = lines[index]
+          else delete optionValues[index][valuesLanguage.value]
+        }
+        while (optionValues.length && !Object.keys(optionValues.at(-1)).length) optionValues.pop()
+      })
+
+      const loadLanguages = async () => {
+        const response = await fetch("/site-settings/languages")
+        if (!response.ok) throw new Error()
+        const catalog = await response.json()
+        if (!catalog.length) throw new Error()
+        for (const select of [labelLanguage, valuesLanguage]) {
+          select.replaceChildren(
+            ...catalog.map((language) => new Option(language.label, language.code)),
+          )
+          select.value =
+            catalog.find((language) => language.code === "en-US")?.code ?? catalog[0].code
+          select.disabled = false
+        }
+      }
+
+      const localizedText = (value, language = "en-US") =>
         typeof value === "string"
           ? value
-          : (value?.[language] ?? Object.values(value ?? {})[0] ?? "")
+          : (value?.[language] ?? value?.en ?? Object.values(value ?? {})[0] ?? "")
       const escapeHtml = (value) =>
         String(value ?? "").replace(
           /[&<>'"]/g,
@@ -696,14 +764,25 @@
       const closeModal = () => {
         modal.hidden = true
         form.reset()
+        optionLabel = {}
+        optionValues = []
         status.textContent = ""
         status.classList.remove("error")
       }
-      const openModal = () => {
+      const openModal = async () => {
         form.reset()
+        optionLabel = {}
+        optionValues = []
         status.textContent = ""
         status.classList.remove("error")
         modal.hidden = false
+        try {
+          await loadLanguages()
+        } catch {
+          return showError("Could not load languages. Please try again.")
+        }
+        showLabel()
+        showValues()
         form.label.focus()
       }
 
@@ -746,21 +825,28 @@
         event.preventDefault()
         status.textContent = ""
         status.classList.remove("error")
-        const possibleValues = [
-          ...new Set(
-            form.possibleValues.value
-              .split("\n")
-              .map((value) => value.trim())
-              .filter(Boolean),
-          ),
-        ]
+        const label = Object.fromEntries(
+          Object.entries(optionLabel)
+            .map(([code, value]) => [code, value.trim()])
+            .filter(([, value]) => value),
+        )
+        const possibleValues = optionValues
+          .map((translations) =>
+            Object.fromEntries(
+              Object.entries(translations)
+                .map(([code, value]) => [code, value.trim()])
+                .filter(([, value]) => value),
+            ),
+          )
+          .filter((translations) => Object.keys(translations).length)
+        if (!Object.keys(label).length) return showError("Add a label in at least one language.")
         if (!possibleValues.length) return showError("Add at least one possible value.")
         const response = await fetch("/product-options", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
-            label: { en: form.label.value.trim() },
-            possibleValues: possibleValues.map((value) => ({ en: value })),
+            label,
+            possibleValues,
           }),
         })
         if (!response.ok) {
