@@ -532,7 +532,12 @@
       const variantsContainer = document.querySelector("#variants")
       let productOptions = []
       let loadedVariants = []
+      let productDescription = {}
 
+      const localizedText = (value, language = "en") =>
+        typeof value === "string"
+          ? value
+          : (value?.[language] ?? Object.values(value ?? {})[0] ?? "")
       const escapeHtml = (value) =>
         String(value ?? "").replace(
           /[&<>'"]/g,
@@ -551,7 +556,7 @@
         `<div class="variant-card"${variant.id ? ` data-variant-id="${variant.id}"` : ""} data-has-thumbnail="${Boolean(variant.thumbnailUrl)}" data-has-cover="${Boolean(variant.coverUrl)}"><div class="variant-card-header"><label>Amount (minor units) <input data-variant-unit-amount type="number" min="1" step="1" required value="${escapeHtml(variant.unitAmount)}"></label><label>Currency <input data-variant-currency required minlength="3" maxlength="3" value="${escapeHtml(variant.currency)}"></label><label>Stock <input data-variant-stock type="number" min="0" step="1" required value="${escapeHtml(variant.stock)}"></label><button class="btn btn-danger" data-action="remove-variant" type="button">Remove</button></div>${variantImageHtml("thumbnail", variant.thumbnailUrl)}${variantImageHtml("cover", variant.coverUrl)}${productOptions
           .map((option) => {
             const selection = variant.selections.find((item) => item.option.id === option.id)
-            return `<label class="variant-row"><span>${escapeHtml(option.label)}</span><select data-option-id="${option.id}"><option value="">Not used</option>${option.possibleValues.map((value) => `<option value="${value.id}"${selection?.value.id === value.id ? " selected" : ""}>${escapeHtml(value.label)}</option>`).join("")}</select></label>`
+            return `<label class="variant-row"><span>${escapeHtml(localizedText(option.label))}</span><select data-option-id="${option.id}"><option value="">Not used</option>${option.possibleValues.map((value) => `<option value="${value.id}"${selection?.value.id === value.id ? " selected" : ""}>${escapeHtml(localizedText(value.label))}</option>`).join("")}</select></label>`
           })
           .join("")}</div>`
       const renderVariants = () => {
@@ -589,7 +594,8 @@
           productOptions = await optionsResponse.json()
           loadedVariants = await variantsResponse.json()
           form.name.value = product.name
-          form.description.value = product.description || ""
+          productDescription = product.description || {}
+          form.description.value = localizedText(product.description)
           document.querySelector("#page-title").textContent = `Edit ${product.name}`
           document.querySelector("#subtitle").textContent = `Product #${product.id}`
           document.title = `Edit ${product.name} · Shop Admin`
@@ -709,12 +715,15 @@
         submit.textContent = "Saving…"
         status.textContent = ""
         try {
+          const description = { ...productDescription }
+          if (form.description.value.trim()) description.en = form.description.value.trim()
+          else delete description.en
           const response = await fetch(isCreating ? "/products" : `/products/${productId}`, {
             method: isCreating ? "POST" : "PATCH",
             headers: { "content-type": "application/json" },
             body: JSON.stringify({
               name: form.name.value,
-              description: form.description.value || null,
+              description: Object.keys(description).length ? description : null,
             }),
           })
           if (!response.ok) {

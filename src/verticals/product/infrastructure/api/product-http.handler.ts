@@ -4,6 +4,7 @@ import { deleteProductUseCase } from "../../application/delete-product.use-case"
 import { getProductUseCase } from "../../application/get-product.use-case"
 import { listProductsUseCase } from "../../application/list-products.use-case"
 import { updateProductUseCase } from "../../application/update-product.use-case"
+import { type LocalizedText } from "../../domain/localized-text"
 
 class ProductHandler {
   list = async () => {
@@ -30,7 +31,7 @@ class ProductHandler {
     request: FastifyRequest<{
       Body: {
         name: string
-        description?: string | null
+        description?: LocalizedText | null
       }
     }>,
     reply: FastifyReply,
@@ -51,7 +52,7 @@ class ProductHandler {
       Params: { id: string }
       Body: Partial<{
         name: string
-        description?: string | null
+        description?: LocalizedText | null
       }>
     }>,
     reply: FastifyReply,

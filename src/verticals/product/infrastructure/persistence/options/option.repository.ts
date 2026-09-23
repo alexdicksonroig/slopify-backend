@@ -2,11 +2,12 @@ import { getDrizzleDB } from "@database"
 import { eq } from "drizzle-orm"
 import { ProductOption } from "../../../domain/options/product-option.entity"
 import { ProductOptionValue } from "../../../domain/options/product-option-value.entity"
+import { type LocalizedText } from "../../../domain/localized-text"
 import { productOptionValues, productOptions } from "../schema"
 
 export type CreateProductOption = {
-  possibleValues: string[]
-  label: string
+  possibleValues: LocalizedText[]
+  label: LocalizedText
 }
 
 class OptionRepository {

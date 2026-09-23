@@ -1,16 +1,26 @@
-import { index, integer, pgTable, primaryKey, serial, text, timestamp } from "drizzle-orm/pg-core"
+import {
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  primaryKey,
+  serial,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core"
+import { type LocalizedText } from "../../domain/localized-text"
 
 export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  description: text("description"),
+  description: jsonb("description").$type<LocalizedText>(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 })
 
 export const productOptions = pgTable("product_options", {
   id: serial("id").primaryKey(),
-  label: text("label").notNull(),
+  label: jsonb("label").$type<LocalizedText>().notNull(),
 })
 
 export const productOptionValues = pgTable("product_option_values", {
@@ -18,7 +28,7 @@ export const productOptionValues = pgTable("product_option_values", {
   productOptionId: integer("product_option_id")
     .notNull()
     .references(() => productOptions.id, { onDelete: "cascade" }),
-  label: text("label").notNull(),
+  label: jsonb("label").$type<LocalizedText>().notNull(),
 })
 
 export const variants = pgTable("variants", {

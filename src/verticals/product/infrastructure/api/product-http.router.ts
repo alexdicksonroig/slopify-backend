@@ -1,4 +1,5 @@
 import { type FastifyPluginAsync } from "fastify"
+import { type LocalizedText } from "../../domain/localized-text"
 import { productHandler } from "./product-http.handler"
 
 const productIdParams = {
@@ -12,7 +13,16 @@ const productIdParams = {
 
 const productBodyProperties = {
   name: { type: "string", minLength: 1 },
-  description: { type: ["string", "null"] },
+  description: {
+    anyOf: [
+      {
+        type: "object",
+        minProperties: 1,
+        additionalProperties: { type: "string" },
+      },
+      { type: "null" },
+    ],
+  },
 }
 
 const router: FastifyPluginAsync = async (fastify): Promise<void> => {
@@ -30,7 +40,7 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
   fastify.post<{
     Body: {
       name: string
-      description?: string | null
+      description?: LocalizedText | null
     }
   }>(
     "/products",
@@ -51,7 +61,7 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
     Params: { id: string }
     Body: Partial<{
       name: string
-      description?: string | null
+      description?: LocalizedText | null
     }>
   }>(
     "/products/:id",

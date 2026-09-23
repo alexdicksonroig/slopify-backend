@@ -2,6 +2,7 @@ import { type FastifyReply, type FastifyRequest } from "fastify"
 import { createProductOptionUseCase } from "../../../application/options/create-product-option.use-case"
 import { deleteProductOptionUseCase } from "../../../application/options/delete-product-option.use-case"
 import { listProductOptionsUseCase } from "../../../application/options/list-product-options.use-case"
+import { type LocalizedText } from "../../../domain/localized-text"
 import { type ProductOption } from "../../../domain/options/product-option.entity"
 
 class OptionHandler {
@@ -20,7 +21,7 @@ class OptionHandler {
 
   create = async (
     request: FastifyRequest<{
-      Body: { possibleValues: string[]; label: string }
+      Body: { possibleValues: LocalizedText[]; label: LocalizedText }
     }>,
     reply: FastifyReply,
   ): Promise<ProductOption> => {

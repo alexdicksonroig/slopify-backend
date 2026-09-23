@@ -1,7 +1,9 @@
+import { type LocalizedText } from "./localized-text"
+
 export class Product {
   constructor(
     readonly id: number,
     readonly name: string,
-    readonly description: string | null,
+    readonly description: LocalizedText | null,
   ) {}
 }

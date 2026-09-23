@@ -1,10 +1,15 @@
 import { type FastifyPluginAsync } from "fastify"
+import { type LocalizedText } from "../../../domain/localized-text"
 import { optionHandler } from "./option-http.handler"
 
-const nonBlankString = {
-  type: "string",
-  minLength: 1,
-  pattern: ".*\\S.*",
+const localizedText = {
+  type: "object",
+  minProperties: 1,
+  additionalProperties: {
+    type: "string",
+    minLength: 1,
+    pattern: ".*\\S.*",
+  },
 }
 
 const optionIdParams = {
@@ -19,7 +24,7 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
 
   // TODO: Require admin authentication for all Product Option mutation routes.
   fastify.post<{
-    Body: { possibleValues: string[]; label: string }
+    Body: { possibleValues: LocalizedText[]; label: LocalizedText }
   }>(
     "/product-options",
     {
@@ -33,9 +38,9 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
               type: "array",
               minItems: 1,
               uniqueItems: true,
-              items: nonBlankString,
+              items: localizedText,
             },
-            label: nonBlankString,
+            label: localizedText,
           },
         },
       },

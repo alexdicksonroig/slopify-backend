@@ -1,6 +1,8 @@
+import { type LocalizedText } from "./localized-text"
+
 export type CreateProduct = {
   name: string
-  description: string | null
+  description: LocalizedText | null
 }
 
 export type UpdateProduct = Partial<CreateProduct>
