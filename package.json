@@ -14,6 +14,7 @@
     "lint:fix": "oxlint --fix",
     "build:ts": "tsc",
     "dev": "tsx watch --env-file=.env src/main.ts",
+    "start": "sudo docker compose up --build --force-recreate cloudflared",
     "db:up": "docker compose --env-file .env up -d postgres",
     "db:down": "docker compose --env-file .env down",
     "db:logs": "docker compose --env-file .env logs -f postgres",
