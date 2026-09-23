@@ -53,6 +53,17 @@ The database health check may take a few seconds. Apply the existing migrations 
 pnpm db:migrate
 ```
 
+Seed the initial site language choices after migrating:
+
+```sh
+pnpm db:seed
+```
+
+The language fixture is a custom SQL migration in `fixtures/`, with its own Drizzle
+migration history. It remains available if you regenerate the main `drizzle/` migrations.
+Run `pnpm db:migrate` before `pnpm db:seed` on a fresh database. Existing language
+selections are preserved if you rerun the seed command.
+
 After changing `src/verticals/example/infrastructure/persistence/schema.ts`, generate and apply a new migration:
 
 ```sh

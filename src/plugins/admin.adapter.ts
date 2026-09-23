@@ -28,6 +28,10 @@ const adminAdapter: FastifyPluginAsync = async (fastify): Promise<void> => {
     }
   })
 
+  fastify.get("/admin/site-settings", async (_request, reply) => {
+    return await reply.sendFile("site-settings.html")
+  })
+
   fastify.get("/admin/orders", async (_request, reply) => {
     return await reply.sendFile("orders.html")
   })

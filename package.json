@@ -19,6 +19,7 @@
     "db:logs": "docker compose --env-file .env logs -f postgres",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:seed": "drizzle-kit migrate --config=drizzle.seed.config.ts",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
