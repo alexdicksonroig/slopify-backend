@@ -6,6 +6,7 @@ import { type LocalizedText } from "../../../domain/localized-text"
 import { productOptionValues, productOptions } from "../schema"
 
 export type CreateProductOption = {
+  optionId: string
   possibleValues: LocalizedText[]
   label: LocalizedText
 }
@@ -22,6 +23,7 @@ class OptionRepository {
       (option) =>
         new ProductOption(
           option.id,
+          option.optionId,
           values
             .filter((value) => value.productOptionId === option.id)
             .map((value) => new ProductOptionValue(value.id, value.label)),
@@ -34,7 +36,7 @@ class OptionRepository {
     return await getDrizzleDB().transaction(async (transaction) => {
       const [record] = await transaction
         .insert(productOptions)
-        .values({ label: option.label })
+        .values({ optionId: option.optionId, label: option.label })
         .returning()
       const values = await transaction
         .insert(productOptionValues)
@@ -43,16 +45,17 @@ class OptionRepository {
 
       return new ProductOption(
         record.id,
+        record.optionId,
         values.map((value) => new ProductOptionValue(value.id, value.label)),
         record.label,
       )
     })
   }
 
-  async delete(id: number): Promise<boolean> {
+  async delete(optionId: string): Promise<boolean> {
     const [record] = await getDrizzleDB()
       .delete(productOptions)
-      .where(eq(productOptions.id, id))
+      .where(eq(productOptions.optionId, optionId))
       .returning({ id: productOptions.id })
     return Boolean(record)
   }

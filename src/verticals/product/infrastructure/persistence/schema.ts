@@ -20,6 +20,7 @@ export const products = pgTable("products", {
 
 export const productOptions = pgTable("product_options", {
   id: serial("id").primaryKey(),
+  optionId: text("option_id").notNull().unique(),
   label: jsonb("label").$type<LocalizedText>().notNull(),
 })
 

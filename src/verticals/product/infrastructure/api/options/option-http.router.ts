@@ -16,7 +16,7 @@ const optionIdParams = {
   type: "object",
   required: ["optionId"],
   additionalProperties: false,
-  properties: { optionId: { type: "string", pattern: "^[1-9][0-9]*$" } },
+  properties: { optionId: { type: "string", minLength: 1, pattern: "^[A-Za-z-]+$" } },
 }
 
 const router: FastifyPluginAsync = async (fastify): Promise<void> => {
@@ -24,14 +24,14 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
 
   // TODO: Require admin authentication for all Product Option mutation routes.
   fastify.post<{
-    Body: { possibleValues: LocalizedText[]; label: LocalizedText }
+    Body: { optionId: string; possibleValues: LocalizedText[]; label: LocalizedText }
   }>(
     "/product-options",
     {
       schema: {
         body: {
           type: "object",
-          required: ["possibleValues", "label"],
+          required: ["optionId", "possibleValues", "label"],
           additionalProperties: false,
           properties: {
             possibleValues: {
@@ -41,6 +41,7 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
               items: localizedText,
             },
             label: localizedText,
+            optionId: { type: "string", minLength: 1, pattern: "^[A-Za-z-]+$" },
           },
         },
       },

@@ -25,7 +25,7 @@ const selectionParams = {
   additionalProperties: false,
   properties: {
     variantId: positiveId,
-    optionId: positiveId,
+    optionId: { type: "string", minLength: 1, pattern: "^[A-Za-z-]+$" },
   },
 }
 
@@ -40,7 +40,7 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
       schema: {
         querystring: {
           type: "object",
-          propertyNames: { type: "string", pattern: "^[1-9][0-9]*$" },
+          propertyNames: { type: "string", minLength: 1, pattern: "^[A-Za-z-]+$" },
           additionalProperties: { type: "string", pattern: "^[1-9][0-9]*$" },
         },
       },
@@ -138,7 +138,7 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
 
   fastify.post<{
     Params: { variantId: string }
-    Body: { optionId: number; valueId: number }
+    Body: { optionId: string; valueId: number }
   }>(
     "/variants/:variantId/selections",
     {
@@ -149,7 +149,7 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
           required: ["optionId", "valueId"],
           additionalProperties: false,
           properties: {
-            optionId: { type: "integer", minimum: 1 },
+            optionId: { type: "string", minLength: 1, pattern: "^[A-Za-z-]+$" },
             valueId: { type: "integer", minimum: 1 },
           },
         },

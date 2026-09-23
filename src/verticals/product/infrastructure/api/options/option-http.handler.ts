@@ -14,14 +14,14 @@ class OptionHandler {
     request: FastifyRequest<{ Params: { optionId: string } }>,
     reply: FastifyReply,
   ): Promise<FastifyReply> => {
-    const deleted = await deleteProductOptionUseCase.execute(Number(request.params.optionId))
+    const deleted = await deleteProductOptionUseCase.execute(request.params.optionId)
     if (!deleted) return await reply.code(404).send({ message: "Product option not found" })
     return await reply.code(204).send()
   }
 
   create = async (
     request: FastifyRequest<{
-      Body: { possibleValues: LocalizedText[]; label: LocalizedText }
+      Body: { optionId: string; possibleValues: LocalizedText[]; label: LocalizedText }
     }>,
     reply: FastifyReply,
   ): Promise<ProductOption> => {

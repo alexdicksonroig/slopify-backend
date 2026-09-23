@@ -99,7 +99,7 @@ class VariantHandler {
   addSelection = async (
     request: FastifyRequest<{
       Params: { variantId: string }
-      Body: { optionId: number; valueId: number }
+      Body: { optionId: string; valueId: number }
     }>,
     reply: FastifyReply,
   ): Promise<void> => {
@@ -119,7 +119,7 @@ class VariantHandler {
   ): Promise<void> => {
     await deleteVariantSelectionUseCase.execute(
       Number(request.params.variantId),
-      Number(request.params.optionId),
+      request.params.optionId,
     )
     await reply.code(204).send()
   }

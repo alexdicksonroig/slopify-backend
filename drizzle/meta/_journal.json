@@ -64,6 +64,13 @@
       "when": 1790161903664,
       "tag": "0008_icy_roughhouse",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790175211192,
+      "tag": "0009_nice_stick",
+      "breakpoints": true
     }
   ]
 }
