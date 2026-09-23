@@ -63,23 +63,6 @@
         font-weight: 700;
         letter-spacing: -0.02em;
       }
-      .deploy-button {
-        margin-left: auto;
-        border: 1px solid #516173;
-        border-radius: 5px;
-        padding: 0.35rem 0.6rem;
-        color: white;
-        background: transparent;
-        font-size: 0.75rem;
-        font-weight: 600;
-      }
-      .deploy-button:hover:not(:disabled) {
-        background: var(--navy-light);
-      }
-      .deploy-saved {
-        color: #7bd88f;
-        font-size: 0.75rem;
-      }
       .brand-mark {
         display: grid;
         place-items: center;
@@ -283,12 +266,20 @@
         color: #405366;
         font-size: 0.92rem;
       }
-      .toast {
+      .toast-stack {
         position: fixed;
         z-index: 30;
         right: 1.5rem;
         bottom: 1.5rem;
+        display: grid;
+        gap: 0.5rem;
+        max-height: calc(100dvh - 3rem);
+        overflow-y: auto;
+        pointer-events: none;
+      }
+      .toast {
         min-width: 260px;
+        max-width: min(400px, calc(100vw - 3rem));
         padding: 0.8rem 1rem;
         color: white;
         background: #2fb344;
@@ -535,11 +526,14 @@
           min-height: 44px;
           flex: 1;
         }
-        .toast {
+        .toast-stack {
           right: 1rem;
           bottom: 1rem;
           left: 1rem;
+        }
+        .toast {
           min-width: 0;
+          max-width: none;
         }
       }
       @media (max-width: 430px) {
@@ -557,17 +551,6 @@
       <aside class="sidebar">
         <div class="brand">
           <span class="brand-mark">S</span><span class="brand-name">Shop Admin</span>
-          <button
-            class="deploy-button"
-            type="button"
-            onclick="
-              this.nextElementSibling.hidden = false
-              fetch('/admin/deploy', { method: 'POST' })
-            "
-          >
-            Save
-          </button>
-          <span class="deploy-saved" hidden>Saved!</span>
         </div>
         <div class="nav-label">Catalog</div>
         <a class="nav-item" href="/admin/"
@@ -638,7 +621,7 @@
         </main>
       </div>
     </div>
-    <div class="toast" id="toast" role="status" hidden></div>
+    <div class="toast-stack" id="toasts"></div>
     <div class="modal-backdrop" id="modal-backdrop" hidden>
       <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <header class="modal-header">
@@ -687,13 +670,12 @@
       const status = document.querySelector("#status")
       const search = document.querySelector("#search")
       const resultCount = document.querySelector("#result-count")
-      const toast = document.querySelector("#toast")
+      const toasts = document.querySelector("#toasts")
       const labelLanguage = document.querySelector("#label-language")
       const valuesLanguage = document.querySelector("#values-language")
       let productOptions = []
       let optionLabel = {}
       let optionValues = []
-      let toastTimer
 
       const showLabel = () => {
         form.label.value = optionLabel[labelLanguage.value] ?? ""
@@ -749,13 +731,12 @@
             ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character],
         )
       const showToast = (message, isError = false) => {
-        clearTimeout(toastTimer)
+        const toast = document.createElement("div")
+        toast.className = `toast${isError ? " error" : ""}`
+        toast.setAttribute("role", isError ? "alert" : "status")
         toast.textContent = message
-        toast.classList.toggle("error", isError)
-        toast.hidden = false
-        toastTimer = setTimeout(() => {
-          toast.hidden = true
-        }, 2800)
+        toasts.append(toast)
+        setTimeout(() => toast.remove(), 2800)
       }
       const showError = (message) => {
         status.textContent = message
@@ -855,8 +836,15 @@
           return
         }
         closeModal()
-        await loadProductOptions()
         showToast("Product option created successfully.")
+        await loadProductOptions()
+        const deployed = await fetch("/admin/deploy", { method: "POST" })
+          .then((response) => response.ok)
+          .catch(() => false)
+        showToast(
+          deployed ? "Storefront deployment started." : "Storefront deployment could not start.",
+          !deployed,
+        )
       })
 
       optionsBody.addEventListener("click", async (event) => {

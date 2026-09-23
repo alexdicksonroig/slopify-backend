@@ -64,23 +64,6 @@
         font-weight: 700;
         letter-spacing: -0.02em;
       }
-      .deploy-button {
-        margin-left: auto;
-        border: 1px solid #516173;
-        border-radius: 5px;
-        padding: 0.35rem 0.6rem;
-        color: white;
-        background: transparent;
-        font-size: 0.75rem;
-        font-weight: 600;
-      }
-      .deploy-button:hover:not(:disabled) {
-        background: var(--navy-light);
-      }
-      .deploy-saved {
-        color: #7bd88f;
-        font-size: 0.75rem;
-      }
       .brand-mark {
         display: grid;
         place-items: center;
@@ -269,6 +252,31 @@
       #status.success {
         color: #238636;
       }
+      .toast-stack {
+        position: fixed;
+        z-index: 30;
+        right: 1.5rem;
+        bottom: 1.5rem;
+        display: grid;
+        gap: 0.5rem;
+        max-height: calc(100dvh - 3rem);
+        overflow-y: auto;
+        pointer-events: none;
+      }
+      .toast {
+        min-width: 260px;
+        max-width: min(400px, calc(100vw - 3rem));
+        padding: 0.8rem 1rem;
+        color: white;
+        background: #2fb344;
+        border-radius: 7px;
+        box-shadow: 0 8px 25px rgb(0 0 0 / 20%);
+        font-size: 0.86rem;
+        font-weight: 600;
+      }
+      .toast.error {
+        background: var(--danger);
+      }
       .variant-list {
         display: grid;
         gap: 0.75rem;
@@ -415,6 +423,15 @@
           align-items: flex-start;
           flex-direction: column;
         }
+        .toast-stack {
+          right: 1rem;
+          bottom: 1rem;
+          left: 1rem;
+        }
+        .toast {
+          min-width: 0;
+          max-width: none;
+        }
         .form-footer {
           align-items: stretch;
           flex-direction: column;
@@ -440,21 +457,11 @@
     </style>
   </head>
   <body>
+    <div class="toast-stack" id="toasts"></div>
     <div class="shell">
       <aside class="sidebar">
         <div class="brand">
           <span class="brand-mark">S</span><span class="brand-name">Shop Admin</span>
-          <button
-            class="deploy-button"
-            type="button"
-            onclick="
-              this.nextElementSibling.hidden = false
-              fetch('/admin/deploy', { method: 'POST' })
-            "
-          >
-            Save
-          </button>
-          <span class="deploy-saved" hidden>Saved!</span>
         </div>
         <div class="nav-label">Catalog</div>
         <a class="nav-item active" href="/admin/"
@@ -551,6 +558,15 @@
       const form = document.querySelector("#product-form")
       const submit = document.querySelector("#submit")
       const status = document.querySelector("#status")
+      const toasts = document.querySelector("#toasts")
+      const showToast = (message, isError = false) => {
+        const toast = document.createElement("div")
+        toast.className = `toast${isError ? " error" : ""}`
+        toast.setAttribute("role", isError ? "alert" : "status")
+        toast.textContent = message
+        toasts.append(toast)
+        setTimeout(() => toast.remove(), 2800)
+      }
       const variantsContainer = document.querySelector("#variants")
       const descriptionLanguage = document.querySelector("#description-language")
       let productOptions = []
@@ -801,16 +817,35 @@
           }
           const savedProduct = await response.json()
           activeProductId = savedProduct.id
-          await syncVariants()
-          showStatus(
-            isCreating ? "Product created successfully." : "Product saved successfully.",
-            "success",
+          showToast(isCreating ? "Product created." : "Product saved.")
+          let variantError
+          try {
+            await syncVariants()
+          } catch (error) {
+            variantError = error
+          }
+          const deployed = await fetch("/admin/deploy", { method: "POST" })
+            .then((response) => response.ok)
+            .catch(() => false)
+          showToast(
+            deployed ? "Storefront deployment started." : "Storefront deployment could not start.",
+            !deployed,
           )
+          if (variantError) throw variantError
+          if (!deployed) {
+            showStatus("Product saved, but storefront deployment could not start.")
+            setTimeout(() => {
+              window.location.href = "/admin/"
+            }, 3000)
+            return
+          }
+          showStatus(isCreating ? "Product created." : "Product saved.", "success")
           setTimeout(() => {
             window.location.href = "/admin/"
-          }, 600)
+          }, 3000)
         } catch (error) {
           showStatus(error.message || "Could not save all product changes.")
+          showToast(error.message || "Could not save all product changes.", true)
           submit.disabled = false
           submit.textContent = isCreating ? "Create product" : "Save changes"
         }

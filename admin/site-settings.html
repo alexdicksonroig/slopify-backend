@@ -63,23 +63,6 @@
         font-weight: 700;
         letter-spacing: -0.02em;
       }
-      .deploy-button {
-        margin-left: auto;
-        border: 1px solid #516173;
-        border-radius: 5px;
-        padding: 0.35rem 0.6rem;
-        color: white;
-        background: transparent;
-        font-size: 0.75rem;
-        font-weight: 600;
-      }
-      .deploy-button:hover:not(:disabled) {
-        background: var(--navy-light);
-      }
-      .deploy-saved {
-        color: #7bd88f;
-        font-size: 0.75rem;
-      }
       .brand-mark {
         display: grid;
         place-items: center;
@@ -283,12 +266,20 @@
         color: #405366;
         font-size: 0.92rem;
       }
-      .toast {
+      .toast-stack {
         position: fixed;
         z-index: 30;
         right: 1.5rem;
         bottom: 1.5rem;
+        display: grid;
+        gap: 0.5rem;
+        max-height: calc(100dvh - 3rem);
+        overflow-y: auto;
+        pointer-events: none;
+      }
+      .toast {
         min-width: 260px;
+        max-width: min(400px, calc(100vw - 3rem));
         padding: 0.8rem 1rem;
         color: white;
         background: #2fb344;
@@ -521,11 +512,14 @@
           min-height: 44px;
           flex: 1;
         }
-        .toast {
+        .toast-stack {
           right: 1rem;
           bottom: 1rem;
           left: 1rem;
+        }
+        .toast {
           min-width: 0;
+          max-width: none;
         }
       }
       @media (max-width: 430px) {
@@ -581,21 +575,11 @@
     </style>
   </head>
   <body>
+    <div class="toast-stack" id="toasts"></div>
     <div class="shell">
       <aside class="sidebar">
         <div class="brand">
           <span class="brand-mark">S</span><span class="brand-name">Shop Admin</span>
-          <button
-            class="deploy-button"
-            type="button"
-            onclick="
-              this.nextElementSibling.hidden = false
-              fetch('/admin/deploy', { method: 'POST' })
-            "
-          >
-            Save
-          </button>
-          <span class="deploy-saved" hidden>Saved!</span>
         </div>
         <div class="nav-label">Catalog</div>
         <a class="nav-item" href="/admin/"
@@ -660,6 +644,15 @@
       const status = document.querySelector("#settings-status")
       const count = document.querySelector("#selection-count")
       const retry = document.querySelector("#retry")
+      const toasts = document.querySelector("#toasts")
+      const showToast = (message, isError = false) => {
+        const toast = document.createElement("div")
+        toast.className = `toast${isError ? " error" : ""}`
+        toast.setAttribute("role", isError ? "alert" : "status")
+        toast.textContent = message
+        toasts.append(toast)
+        setTimeout(() => toast.remove(), 2800)
+      }
       const selectedCodes = () =>
         [...fields.querySelectorAll("input:checked")].map((input) => input.value)
       const updateCount = () => {
@@ -727,8 +720,17 @@
           })
           if (!response.ok) throw new Error("Could not save site settings.")
           status.textContent = "Site settings saved."
+          showToast("Site settings saved.")
+          const deployed = await fetch("/admin/deploy", { method: "POST" })
+            .then((response) => response.ok)
+            .catch(() => false)
+          showToast(
+            deployed ? "Storefront deployment started." : "Storefront deployment could not start.",
+            !deployed,
+          )
         } catch {
           status.textContent = "Could not save site settings. Please try again."
+          showToast("Could not save site settings. Please try again.", true)
         } finally {
           save.disabled = false
           fields.disabled = false
