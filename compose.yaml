@@ -60,5 +60,24 @@ services:
       retries: 10
       start_period: 5s
 
+  backup:
+    container_name: slopify-backup
+    build:
+      context: .
+      dockerfile: docker/backup/Dockerfile
+    restart: unless-stopped
+    environment:
+      PGHOST: postgres
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+      R2_ENDPOINT: ${R2_ENDPOINT}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY}
+      R2_BACKUP_BUCKET: ${R2_BACKUP_BUCKET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   postgres-data:

@@ -23,6 +23,22 @@ Run the test cases.
 
 Provide your bucket credentials in the gitignored `.env` file. The application validates all R2 settings at startup. `R2_PUBLIC_BASE_URL` is the public bucket or custom-domain URL used in Product API responses.
 
+## Daily database backups
+
+The `backup` Compose service dumps the database daily at 03:00 UTC to
+`postgres/<timestamp>.dump` in `R2_BACKUP_BUCKET`, which must be a **private** bucket. Run a
+backup immediately with:
+
+```sh
+docker compose exec backup pnpm db:backup
+```
+
+Restore with:
+
+```sh
+pg_restore --clean --if-exists --no-owner --dbname="$DATABASE_URL" <file>.dump
+```
+
 ## Stripe checkout webhooks
 
 Set `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` in `.env`. For local webhook forwarding:
