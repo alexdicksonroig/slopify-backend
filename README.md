@@ -55,6 +55,17 @@ Create a Deploy Hook in the Vercel frontend project and set its URL as
 `VERCEL_DEPLOY_HOOK_URL` in the backend environment. The **Save** button in the admin header
 triggers this hook, causing Vercel to redeploy the frontend using its configured build command.
 
+## AI Generate
+
+The admin **AI Generate** button runs the Claude Code CLI, which the Docker image installs. Run
+`claude setup-token` on a machine logged in to your Claude subscription and set the printed token
+as `CLAUDE_CODE_OAUTH_TOKEN` in `.env`. Do not also set `ANTHROPIC_API_KEY`, which would take
+precedence and bill the API instead. Check it works with:
+
+```sh
+docker exec slopify-backend sh -c 'echo "say hi" | claude -p'
+```
+
 ## Database and migrations
 
 Start the local PostgreSQL database with Docker Compose:
