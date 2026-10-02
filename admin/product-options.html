@@ -673,6 +673,7 @@
         </form>
       </section>
     </div>
+    <script src="/admin/ai-generate.js"></script>
     <script>
       const form = document.querySelector("#option-form")
       const optionsBody = document.querySelector("#product-options")
@@ -701,6 +702,26 @@
       }
       labelLanguage.addEventListener("change", showLabel)
       valuesLanguage.addEventListener("change", showValues)
+      registerAiGenerate(labelLanguage.closest(".localized-field"), {
+        label: "Product option label",
+        shape: "text",
+        context: () => form.possibleValues.value && `Possible values: ${form.possibleValues.value}`,
+        setValue: (value) => {
+          optionLabel = value
+          showLabel()
+          showToast("Label generated. Review it, then save.")
+        },
+      })
+      registerAiGenerate(valuesLanguage.closest(".localized-field"), {
+        label: "Product option possible values",
+        shape: "list",
+        context: () => form.label.value && `Option label: ${form.label.value}`,
+        setValue: (value) => {
+          optionValues = value
+          showValues()
+          showToast("Possible values generated. Review them, then save.")
+        },
+      })
       form.label.addEventListener("input", () => {
         if (form.label.value.trim()) optionLabel[labelLanguage.value] = form.label.value
         else delete optionLabel[labelLanguage.value]

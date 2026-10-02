@@ -550,6 +550,7 @@
         </main>
       </div>
     </div>
+    <script src="/admin/ai-generate.js"></script>
     <script>
       const productPathPart = location.pathname.split("/").filter(Boolean).at(-1)
       const isCreating = productPathPart === "new"
@@ -598,6 +599,16 @@
         else delete productDescription[descriptionLanguage.value]
       })
       descriptionLanguage.addEventListener("change", showDescription)
+      registerAiGenerate(descriptionLanguage.closest(".localized-field"), {
+        label: "Product description",
+        shape: "text",
+        context: () => `Product name: ${form.name.value}`,
+        setValue: (value) => {
+          productDescription = value
+          showDescription()
+          showToast("Description generated. Review it, then save.")
+        },
+      })
 
       const localizedText = (value, language = "en-US") =>
         typeof value === "string"
