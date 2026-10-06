@@ -61,8 +61,8 @@ test("variant filtering and selection routes preserve string option IDs", async 
   const originalAdd = variantRepository.addSelection
   const originalDelete = variantRepository.deleteSelection
   const calls: unknown[] = []
-  variantRepository.findAll = async (filters) => {
-    calls.push(filters)
+  variantRepository.findAll = async (filters, search) => {
+    calls.push({ filters, search })
     return []
   }
   variantRepository.addSelection = async (...args) => {
@@ -78,10 +78,19 @@ test("variant filtering and selection routes preserve string option IDs", async 
       { optionId: "color", valueId: 3 },
     ])
     assert.equal((await app.inject("/variants?color=3&size=4")).statusCode, 200)
-    assert.deepEqual(calls.shift(), [
-      { optionId: "color", valueId: 3 },
-      { optionId: "size", valueId: 4 },
-    ])
+    assert.deepEqual(calls.shift(), {
+      filters: [
+        { optionId: "color", valueId: 3 },
+        { optionId: "size", valueId: 4 },
+      ],
+      search: undefined,
+    })
+    assert.equal((await app.inject("/variants?q=%20rioja%20&color=3")).statusCode, 200)
+    assert.deepEqual(calls.shift(), {
+      filters: [{ optionId: "color", valueId: 3 }],
+      search: "rioja",
+    })
+    assert.equal((await app.inject("/variants?q=" + "a".repeat(101))).statusCode, 400)
     assert.equal((await app.inject("/variants?color=red")).statusCode, 400)
     for (const optionId of ["color1", "frame_color", "frame color"]) {
       assert.equal(

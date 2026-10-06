@@ -13,7 +13,11 @@ import { parseVariantFilters } from "../../variant-filter-query.adapter"
 
 class VariantHandler {
   list = async (request: FastifyRequest<{ Querystring: Record<string, string> }>) => {
-    const variants = await listAllVariantsUseCase.execute(parseVariantFilters(request.query))
+    const { q, ...optionQuery } = request.query
+    const variants = await listAllVariantsUseCase.execute(
+      parseVariantFilters(optionQuery),
+      q?.trim() || undefined,
+    )
 
     return variants.map((variant) => ({
       id: variant.id,

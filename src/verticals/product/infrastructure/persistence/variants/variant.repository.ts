@@ -1,12 +1,15 @@
 import { getDrizzleDB, type DatabaseTransaction } from "@database"
-import { and, countDistinct, eq, gte, inArray, or, sql } from "drizzle-orm"
+import { and, countDistinct, eq, gte, ilike, inArray, or, sql } from "drizzle-orm"
 import { ProductOption } from "../../../domain/options/product-option.entity"
 import { ProductOptionValue } from "../../../domain/options/product-option-value.entity"
 import { Variant, type ProductOptionSelection } from "../../../domain/variants/variant.entity"
-import { productOptionValues, productOptions, variants, selectedOptions } from "../schema"
+import { productOptionValues, productOptions, products, variants, selectedOptions } from "../schema"
 
 class VariantRepository {
-  async findAll(filters: { optionId: string; valueId: number }[]): Promise<Variant[]> {
+  async findAll(
+    filters: { optionId: string; valueId: number }[],
+    search?: string,
+  ): Promise<Variant[]> {
     const database = getDrizzleDB()
     const filterConditions = filters.map((filter) =>
       and(
@@ -25,13 +28,19 @@ class VariantRepository {
       : undefined
 
     const records = await database
-      .select()
+      .select({ variants })
       .from(variants)
-      .where(variantIds ? inArray(variants.id, variantIds) : undefined)
+      .innerJoin(products, eq(products.id, variants.productId))
+      .where(
+        and(
+          variantIds ? inArray(variants.id, variantIds) : undefined,
+          search ? ilike(products.name, `%${search}%`) : undefined,
+        ),
+      )
       .orderBy(variants.id)
 
     return records.map(
-      (record) =>
+      ({ variants: record }) =>
         new Variant(
           record.id,
           record.productId,

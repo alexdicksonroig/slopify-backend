@@ -71,6 +71,13 @@
       "when": 1790175211192,
       "tag": "0009_nice_stick",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791285787969,
+      "tag": "0010_products_name_search",
+      "breakpoints": true
     }
   ]
 }

@@ -10,13 +10,17 @@ import {
 } from "drizzle-orm/pg-core"
 import { type LocalizedText } from "../../domain/localized-text"
 
-export const products = pgTable("products", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  description: jsonb("description").$type<LocalizedText>(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-})
+export const products = pgTable(
+  "products",
+  {
+    id: serial("id").primaryKey(),
+    name: text("name").notNull(),
+    description: jsonb("description").$type<LocalizedText>(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [index("products_name_trgm_idx").using("gin", table.name.op("gin_trgm_ops"))],
+)
 
 export const productOptions = pgTable("product_options", {
   id: serial("id").primaryKey(),

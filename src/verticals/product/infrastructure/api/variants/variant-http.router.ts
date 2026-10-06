@@ -40,6 +40,7 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
       schema: {
         querystring: {
           type: "object",
+          properties: { q: { type: "string", maxLength: 100 } },
           propertyNames: { type: "string", minLength: 1, pattern: "^[A-Za-z-]+$" },
           additionalProperties: { type: "string", pattern: "^[1-9][0-9]*$" },
         },
