@@ -3,13 +3,10 @@ import fp from "fastify-plugin"
 
 export default fp(
   async (fastify) => {
-    const origins = (process.env.CORS_ORIGIN ?? "")
-      .split(",")
-      .map((origin) => origin.trim())
-      .filter((origin) => origin.length > 0)
-    if (origins.length === 0) return
+    const origin = ["http://localhost:5173"]
+    if (process.env.FRONTEND_URL) origin.push(process.env.FRONTEND_URL)
 
-    await fastify.register(cors, { origin: origins })
+    await fastify.register(cors, { origin })
   },
   { name: "cors" },
 )
