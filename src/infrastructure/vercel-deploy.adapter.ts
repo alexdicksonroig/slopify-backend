@@ -1,5 +1,5 @@
-export const vercelDeployAdapter = {
-  redeployFrontend: async (): Promise<void> => {
+class VercelDeployAdapter {
+  async redeployFrontend(): Promise<void> {
     const deployHookUrl = process.env.VERCEL_DEPLOY_HOOK_URL?.trim()
     if (!deployHookUrl) throw new Error("VERCEL_DEPLOY_HOOK_URL is required")
 
@@ -7,5 +7,7 @@ export const vercelDeployAdapter = {
     if (!response.ok) {
       throw new Error(`Vercel deploy hook returned ${response.status}`)
     }
-  },
+  }
 }
+
+export const vercelDeployAdapter = new VercelDeployAdapter()

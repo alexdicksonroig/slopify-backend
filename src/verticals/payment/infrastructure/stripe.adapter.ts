@@ -6,8 +6,8 @@ if (!secretKey) throw new Error("STRIPE_SECRET_KEY is required")
 const corsOrigin = process.env.CORS_ORIGIN ?? "http://localhost:5173"
 const stripe = new Stripe(secretKey)
 
-export const stripeAdapter = {
-  createCheckoutSession: async (
+class StripeAdapter {
+  async createCheckoutSession(
     orderId: number,
     items: ReadonlyArray<{
       variantId: number
@@ -16,7 +16,7 @@ export const stripeAdapter = {
       unitAmount: number
       currency: string
     }>,
-  ): Promise<{ id: string; clientSecret: string }> => {
+  ): Promise<{ id: string; clientSecret: string }> {
     const session = await stripe.checkout.sessions.create({
       ui_mode: "elements",
       mode: "payment",
@@ -36,20 +36,20 @@ export const stripeAdapter = {
     })
     if (!session.client_secret) throw new Error("Stripe did not return a client secret")
     return { id: session.id, clientSecret: session.client_secret }
-  },
+  }
 
-  getCheckoutSession: async (sessionId: string) => {
+  async getCheckoutSession(sessionId: string) {
     const session = await stripe.checkout.sessions.retrieve(sessionId)
     return { status: session.status, paymentStatus: session.payment_status }
-  },
+  }
 
-  parseWebhook: (
+  parseWebhook(
     payload: Buffer,
     signature: string,
   ): {
     orderId: number
     status: "paid" | "payment_failed" | "expired"
-  } | null => {
+  } | null {
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET?.trim()
     if (!webhookSecret) throw new Error("STRIPE_WEBHOOK_SECRET is required")
 
@@ -72,5 +72,7 @@ export const stripeAdapter = {
     if (event.type === "checkout.session.expired") return { orderId, status: "expired" }
 
     return null
-  },
+  }
 }
+
+export const stripeAdapter = new StripeAdapter()

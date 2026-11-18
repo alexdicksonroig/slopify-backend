@@ -18,8 +18,6 @@ export type AiGenerateRequest = {
   languages: string[]
 }
 
-let running = false
-
 const isTranslations = (value: unknown, languages: string[]): value is Translations => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return false
   const entries = Object.entries(value)
@@ -37,13 +35,13 @@ const isTranslations = (value: unknown, languages: string[]): value is Translati
 
 export class AiGenerateBusyError extends Error {}
 
-export const aiGenerateAdapter = {
+class AiGenerateAdapter {
+  private running = false
+
   // Claude only turns text into translations: it gets no tools and the caller saves the result.
-  generateLocalizedText: async (
-    request: AiGenerateRequest,
-  ): Promise<Translations | Translations[]> => {
-    if (running) throw new AiGenerateBusyError()
-    running = true
+  async generateLocalizedText(request: AiGenerateRequest): Promise<Translations | Translations[]> {
+    if (this.running) throw new AiGenerateBusyError()
+    this.running = true
     try {
       const translations = {
         type: "object",
@@ -121,7 +119,9 @@ Each translation must read naturally in its language, not as a word-for-word cop
       }
       throw new Error("AI generation returned an invalid value")
     } finally {
-      running = false
+      this.running = false
     }
-  },
+  }
 }
+
+export const aiGenerateAdapter = new AiGenerateAdapter()

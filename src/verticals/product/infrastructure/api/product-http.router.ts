@@ -36,7 +36,6 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
     productHandler.get,
   )
 
-  // TODO: Require admin authentication for all Product mutation routes.
   fastify.post<{
     Body: {
       name: string
@@ -45,6 +44,7 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
   }>(
     "/products",
     {
+      onRequest: fastify.authenticate,
       schema: {
         body: {
           type: "object",
@@ -66,6 +66,7 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
   }>(
     "/products/:id",
     {
+      onRequest: fastify.authenticate,
       schema: {
         params: productIdParams,
         body: {
@@ -82,6 +83,7 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
   fastify.delete<{ Params: { id: string } }>(
     "/products/:id",
     {
+      onRequest: fastify.authenticate,
       schema: { params: productIdParams },
     },
     productHandler.delete,

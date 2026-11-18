@@ -21,17 +21,20 @@
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "drizzle-kit migrate --config=drizzle.seed.config.ts",
     "db:studio": "drizzle-kit studio",
-    "db:backup": "tsx src/backup-database.ts"
+    "db:backup": "tsx src/scripts/backup-database.ts",
+    "admin:user": "tsx src/scripts/create-admin-user.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1095.0",
     "@fastify/autoload": "6.0.0",
     "@fastify/cors": "11.3.0",
+    "@fastify/jwt": "9.1.0",
     "@fastify/multipart": "10.1.0",
     "@fastify/sensible": "6.0.0",
     "@fastify/static": "10.1.2",
     "@fastify/swagger": "9.8.1",
     "@fastify/swagger-ui": "6.1.0",
+    "bcrypt": "6.0.0",
     "dotenv": "17.4.2",
     "drizzle-orm": "0.45.2",
     "fastify": "5.0.0",
@@ -42,6 +45,7 @@
     "stripe": "22.5.0"
   },
   "devDependencies": {
+    "@types/bcrypt": "6.0.0",
     "@types/node": "25.0.3",
     "drizzle-kit": "0.31.10",
     "oxfmt": "0.62.0",

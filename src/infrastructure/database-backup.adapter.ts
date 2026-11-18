@@ -23,8 +23,8 @@ const dumpDatabase = (): Promise<Buffer> =>
     })
   })
 
-export const databaseBackupAdapter = {
-  backupToR2: async (): Promise<string> => {
+class DatabaseBackupAdapter {
+  async backupToR2(): Promise<string> {
     const client = new S3Client({
       endpoint: requiredEnvironmentVariable("R2_ENDPOINT"),
       region: "auto",
@@ -45,5 +45,7 @@ export const databaseBackupAdapter = {
     )
 
     return key
-  },
+  }
 }
+
+export const databaseBackupAdapter = new DatabaseBackupAdapter()

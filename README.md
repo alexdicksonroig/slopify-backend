@@ -49,6 +49,20 @@ stripe listen --forward-to localhost:3000/stripe/webhook
 
 Use the webhook signing secret printed by the Stripe CLI as `STRIPE_WEBHOOK_SECRET`.
 
+## Admin authentication
+
+The admin pages (`/admin/*`), the API documentation (`/documentation`), `GET /orders`, and every
+route that changes data require an admin session. Logging in at `/admin/login` sets an HttpOnly
+cookie holding a JWT that is valid for 7 days. Set a long random `JWT_SECRET` in `.env` (for
+example `openssl rand -hex 32`); changing it logs everyone out.
+
+Create an admin user, or reset an existing user's password, with:
+
+```sh
+pnpm admin:user admin@example.com
+docker compose exec backend pnpm admin:user admin@example.com # in Docker
+```
+
 ## Storefront deployment
 
 Create a Deploy Hook in the Vercel frontend project and set its URL as

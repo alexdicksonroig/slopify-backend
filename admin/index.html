@@ -708,6 +708,11 @@
             <path d="M8 7h6M8 11h6" /></svg
           >API documentation</a
         >
+        <a class="nav-item" href="/admin/login" data-logout
+          ><svg class="nav-icon" viewBox="0 0 24 24">
+            <path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h11" /></svg
+          >Log out</a
+        >
       </aside>
       <div class="content">
         <main class="page">
@@ -780,6 +785,7 @@
         </form>
       </section>
     </div>
+    <script src="/admin/auth.js"></script>
     <script>
       const form = document.querySelector("#product-form")
       const productsBody = document.querySelector("#products")

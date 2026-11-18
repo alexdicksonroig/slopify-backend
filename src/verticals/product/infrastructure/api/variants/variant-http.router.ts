@@ -71,6 +71,7 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
   }>(
     "/products/:productId/variants",
     {
+      onRequest: fastify.authenticate,
       schema: {
         params: productIdParams,
         body: {
@@ -94,6 +95,7 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
   }>(
     "/variants/:variantId/stock",
     {
+      onRequest: fastify.authenticate,
       schema: {
         params: variantIdParams,
         body: {
@@ -109,31 +111,31 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
 
   fastify.put<{ Params: { variantId: string } }>(
     "/variants/:variantId/thumbnail",
-    { schema: { params: variantIdParams } },
+    { onRequest: fastify.authenticate, schema: { params: variantIdParams } },
     variantImageHandler.uploadThumbnail,
   )
 
   fastify.delete<{ Params: { variantId: string } }>(
     "/variants/:variantId/thumbnail",
-    { schema: { params: variantIdParams } },
+    { onRequest: fastify.authenticate, schema: { params: variantIdParams } },
     variantImageHandler.removeThumbnail,
   )
 
   fastify.put<{ Params: { variantId: string } }>(
     "/variants/:variantId/cover",
-    { schema: { params: variantIdParams } },
+    { onRequest: fastify.authenticate, schema: { params: variantIdParams } },
     variantImageHandler.uploadCover,
   )
 
   fastify.delete<{ Params: { variantId: string } }>(
     "/variants/:variantId/cover",
-    { schema: { params: variantIdParams } },
+    { onRequest: fastify.authenticate, schema: { params: variantIdParams } },
     variantImageHandler.removeCover,
   )
 
   fastify.delete<{ Params: { variantId: string } }>(
     "/variants/:variantId",
-    { schema: { params: variantIdParams } },
+    { onRequest: fastify.authenticate, schema: { params: variantIdParams } },
     variantHandler.delete,
   )
 
@@ -143,6 +145,7 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
   }>(
     "/variants/:variantId/selections",
     {
+      onRequest: fastify.authenticate,
       schema: {
         params: variantIdParams,
         body: {
@@ -163,7 +166,7 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
     Params: { variantId: string; optionId: string }
   }>(
     "/variants/:variantId/selections/:optionId",
-    { schema: { params: selectionParams } },
+    { onRequest: fastify.authenticate, schema: { params: selectionParams } },
     variantHandler.deleteSelection,
   )
 }

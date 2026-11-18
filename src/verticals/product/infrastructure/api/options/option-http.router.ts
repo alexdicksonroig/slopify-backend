@@ -22,12 +22,12 @@ const optionIdParams = {
 const router: FastifyPluginAsync = async (fastify): Promise<void> => {
   fastify.get("/product-options", optionHandler.list)
 
-  // TODO: Require admin authentication for all Product Option mutation routes.
   fastify.post<{
     Body: { optionId: string; possibleValues: LocalizedText[]; label: LocalizedText }
   }>(
     "/product-options",
     {
+      onRequest: fastify.authenticate,
       schema: {
         body: {
           type: "object",
@@ -51,7 +51,7 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
 
   fastify.delete<{ Params: { optionId: string } }>(
     "/product-options/:optionId",
-    { schema: { params: optionIdParams } },
+    { onRequest: fastify.authenticate, schema: { params: optionIdParams } },
     optionHandler.delete,
   )
 }

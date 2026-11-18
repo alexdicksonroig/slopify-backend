@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import Fastify from "fastify"
+import { adminAuth, adminCookie } from "./helpers/admin-session"
 import optionRouter from "../src/verticals/product/infrastructure/api/options/option-http.router"
 import { optionRepository } from "../src/verticals/product/infrastructure/persistence/options/option.repository"
 import { ProductOption } from "../src/verticals/product/domain/options/product-option.entity"
@@ -16,11 +17,13 @@ test("option creation requires a string ID and deletion uses that ID", async () 
     return true
   }
   try {
+    await app.register(adminAuth)
     await app.register(optionRouter)
     const payload = { label: { en: "Color" }, possibleValues: [{ en: "Red" }] }
     for (const optionId of [undefined, "", "   ", 12, "color1", "frame color", "frame_color"]) {
       const response = await app.inject({
         method: "POST",
+        headers: { cookie: adminCookie },
         url: "/product-options",
         payload: { ...payload, optionId },
       })
@@ -28,6 +31,7 @@ test("option creation requires a string ID and deletion uses that ID", async () 
     }
     const created = await app.inject({
       method: "POST",
+      headers: { cookie: adminCookie },
       url: "/product-options",
       payload: { ...payload, optionId: "frame-color" },
     })
@@ -36,6 +40,7 @@ test("option creation requires a string ID and deletion uses that ID", async () 
     assert.equal(created.json().optionId, "frame-color")
     const deleted = await app.inject({
       method: "DELETE",
+      headers: { cookie: adminCookie },
       url: "/product-options/frame-color",
     })
     assert.equal(deleted.statusCode, 204)
@@ -72,6 +77,7 @@ test("variant filtering and selection routes preserve string option IDs", async 
     calls.push(args)
   }
   try {
+    await app.register(adminAuth)
     await app.register(variantRouter)
     assert.deepEqual(parseVariantFilters({ "001": "2", color: "3" }), [
       { optionId: "001", valueId: 2 },
@@ -100,6 +106,7 @@ test("variant filtering and selection routes preserve string option IDs", async 
     }
     const added = await app.inject({
       method: "POST",
+      headers: { cookie: adminCookie },
       url: "/variants/7/selections",
       payload: { optionId: "frame-color", valueId: 3 },
     })
@@ -107,6 +114,7 @@ test("variant filtering and selection routes preserve string option IDs", async 
     assert.deepEqual(calls.shift(), [7, "frame-color", 3])
     const deleted = await app.inject({
       method: "DELETE",
+      headers: { cookie: adminCookie },
       url: "/variants/7/selections/frame-color",
     })
     assert.equal(deleted.statusCode, 204)

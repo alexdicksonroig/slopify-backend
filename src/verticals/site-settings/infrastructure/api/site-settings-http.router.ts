@@ -5,10 +5,10 @@ const router: FastifyPluginAsync = async (fastify): Promise<void> => {
   fastify.get("/site-settings", siteSettingsHandler.get)
   fastify.get("/site-settings/languages", siteSettingsHandler.listLanguages)
 
-  // TODO: Require admin authentication for mutation routes, as with other admin resources.
   fastify.put<{ Body: { supportedLanguages: string[] } }>(
     "/site-settings",
     {
+      onRequest: fastify.authenticate,
       schema: {
         body: {
           type: "object",

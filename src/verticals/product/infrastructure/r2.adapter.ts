@@ -19,8 +19,8 @@ const client = new S3Client({
   },
 })
 
-export const r2Adapter = {
-  upload: async (key: string, body: Uint8Array, contentType: string): Promise<void> => {
+class R2Adapter {
+  async upload(key: string, body: Uint8Array, contentType: string): Promise<void> {
     await client.send(
       new PutObjectCommand({
         Bucket: bucket,
@@ -30,11 +30,15 @@ export const r2Adapter = {
         CacheControl: "public, max-age=31536000, immutable",
       }),
     )
-  },
+  }
 
-  delete: async (key: string): Promise<void> => {
+  async delete(key: string): Promise<void> {
     await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }))
-  },
+  }
 
-  publicUrl: (key: string): string => `${publicBaseUrl}/${bucket}/${key}`,
+  publicUrl(key: string): string {
+    return `${publicBaseUrl}/${bucket}/${key}`
+  }
 }
+
+export const r2Adapter = new R2Adapter()

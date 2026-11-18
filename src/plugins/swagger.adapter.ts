@@ -16,7 +16,8 @@ const swaggerAdapter: FastifyPluginAsync = async (fastify): Promise<void> => {
 
   await fastify.register(swaggerUi, {
     routePrefix: "/documentation",
+    uiHooks: { onRequest: fastify.authenticatePage },
   })
 }
 
-export default fp(swaggerAdapter, { name: "swagger" })
+export default fp(swaggerAdapter, { name: "swagger", dependencies: ["admin-auth"] })
