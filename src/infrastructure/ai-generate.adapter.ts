@@ -38,7 +38,6 @@ export class AiGenerateBusyError extends Error {}
 class AiGenerateAdapter {
   private running = false
 
-  // Claude only turns text into translations: it gets no tools and the caller saves the result.
   async generateLocalizedText(request: AiGenerateRequest): Promise<Translations | Translations[]> {
     if (this.running) throw new AiGenerateBusyError()
     this.running = true
@@ -93,7 +92,6 @@ Each translation must read naturally in its language, not as a word-for-word cop
           "--json-schema",
           JSON.stringify(schema),
         ],
-        // Run outside the project so no repository instructions leak into the prompt.
         { cwd: tmpdir(), timeout: 3 * 60 * 1000, maxBuffer: 10 * 1024 * 1024 },
       )
       run.child.stdin?.end(instructions)

@@ -2,7 +2,6 @@ import { getDrizzleDB } from "@database"
 import { eq, inArray } from "drizzle-orm"
 import { products, variants } from "../persistence/schema"
 
-// revised but not optimal
 export const getCheckoutItemsDispatcher = {
   execute: async (items: ReadonlyArray<{ variantId: number; quantity: number }>) => {
     if (items.length === 0) return []

@@ -113,7 +113,6 @@
     )
   }
 
-  // Keep Escape from also closing a page modal the field lives in.
   dialog.addEventListener("keydown", (event) => {
     if (event.key === "Escape") event.stopPropagation()
   })
@@ -155,8 +154,6 @@
     }
   })
 
-  // Pages register each localized field; the generated value only fills the page's draft,
-  // so nothing is saved until the admin reviews it and saves the form.
   window.registerAiGenerate = (field, options) => {
     const select = field.querySelector("select")
     const column = document.createElement("div")

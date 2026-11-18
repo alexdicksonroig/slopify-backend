@@ -7,7 +7,6 @@ const requiredEnvironmentVariable = (name: string): string => {
   return value
 }
 
-// pg_dump reads its connection from PGHOST, PGUSER, PGPASSWORD and PGDATABASE
 const dumpDatabase = (): Promise<Buffer> =>
   new Promise((resolve, reject) => {
     const pgDump = spawn("pg_dump", ["--format=custom", "--no-owner", "--no-acl"], {
